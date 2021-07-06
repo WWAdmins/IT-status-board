@@ -1,0 +1,15 @@
+{
+    "exCloudAPI" : {
+        "allDecives" : "https://cloud-ie.aerohive.com/xapi/v1/monitor/devices/"
+    },
+    "sharePointAPI" : {
+        "getList" : "https://wineworksgroup.sharepoint.com/library/_api/web/lists/GetByTitle('[list name here]')/items",
+        "replaceFlag" : "[list name here]",
+        "itRegListName" : "IT Register",
+        "typeJson" : "application/json;odata=verbose",
+        "targetColumns" : "Id,Title,Priority,Status,Body,Awaiting_x0020_Action_x0020_By,Site,Created",
+        "filter" : {
+            "status" : ["1","2","3","4"]
+        }
+    }
+}
