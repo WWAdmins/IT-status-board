@@ -1,0 +1,21 @@
+{
+    "exCloud" : {
+        "token" : "P-4bCBXEXga0fKgQuM_vdMbMXswvxKimc93ed563",
+        "ownerId" : 3324,
+        "clientSecret" : "c8a4bd9146d061435491b0a99fc6025d",
+        "clientId" : "c93ed563",
+        "redirectUri" : "https://www.wineworks.co.nz/"
+    },
+    "sharePointAPI" : {
+        "token" : "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyIsImtpZCI6Im5PbzNaRHJPRFhFSzFqS1doWHNsSFJfS1hFZyJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvd2luZXdvcmtzZ3JvdXAuc2hhcmVwb2ludC5jb21AY2JjNzEwMzMtZDExYi00YTJmLWE0NGEtYzBmNzEzNTAyMjY3IiwiaXNzIjoiMDAwMDAwMDEtMDAwMC0wMDAwLWMwMDAtMDAwMDAwMDAwMDAwQGNiYzcxMDMzLWQxMWItNGEyZi1hNDRhLWMwZjcxMzUwMjI2NyIsImlhdCI6MTYyNTY5NzEzMiwibmJmIjoxNjI1Njk3MTMyLCJleHAiOjE2MjU3ODM4MzIsImlkZW50aXR5cHJvdmlkZXIiOiIwMDAwMDAwMS0wMDAwLTAwMDAtYzAwMC0wMDAwMDAwMDAwMDBAY2JjNzEwMzMtZDExYi00YTJmLWE0NGEtYzBmNzEzNTAyMjY3IiwibmFtZWlkIjoiYmFlMjhmZDctNGRkMS00MWMzLWJmYmYtNTkzZTFiMWUxYzM1QGNiYzcxMDMzLWQxMWItNGEyZi1hNDRhLWMwZjcxMzUwMjI2NyIsIm9pZCI6ImNkYzUyNzdiLWUwNmQtNDFiMi1iNmIzLWE2NjU1MGU3YzVjOCIsInN1YiI6ImNkYzUyNzdiLWUwNmQtNDFiMi1iNmIzLWE2NjU1MGU3YzVjOCIsInRydXN0ZWRmb3JkZWxlZ2F0aW9uIjoiZmFsc2UifQ.K2LntwoCqeMogphtYOIeaSMKSA49Hhtdt0GXi9jyBETkbqvm-h0aQ1n_uFSSI_8zLpId4dk07fAWntqGOsU7_YXZrnVcHqcAAaDflFHz2q_0wvdtML5oVLDm1j_3OtJVB3AZdiOQDfA-AwwiRpnwBIsg371jQ6LoGyrHbJz6zIMFECSyok8x7q72Lrpe6QY0L6g6RVpKHjVhWSWm3BaN36pFaVx9K9hmXrwoZJ1ao1FSpVzGUKozB9l2-Wu4D6p0TXkBl6e_LS5RdveFSb9K3WkfulWPV1Fy2Dx3t1BXpakA63hDKcrb5zgP2h5WNtjP8BN68mffUaqGMEFkmXi0CA",
+        "tenant" : "cbc71033-d11b-4a2f-a44a-c0f713502267",
+        "oAuthLink" : "https://accounts.accesscontrol.windows.net/[tenant here]/tokens/OAuth/2/",
+        "replaceFlag" : "[tenant here]",
+        "grant_type" : "client_credentials",
+        "clientId" : "bae28fd7-4dd1-41c3-bfbf-593e1b1e1c35@cbc71033-d11b-4a2f-a44a-c0f713502267",
+        "client_secret" : "4JyXdmxW8hXWHP9hw0kAYo+rnUItXebaEG3D2ZNbAe8=",
+        "domain" : "wineworksgroup.sharepoint.com",
+        "resource" : "00000003-0000-0ff1-ce00-000000000000/@cbc71033-d11b-4a2f-a44a-c0f713502267",
+        "expires_on" : null
+    }
+}

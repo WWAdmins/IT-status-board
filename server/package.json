@@ -1,0 +1,22 @@
+{
+  "name": "status-board-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon ./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.10"
+  },
+  "dependencies": {
+    "@pnp/nodejs-commonjs": "^2.6.0",
+    "@pnp/sp-commonjs": "^2.6.0",
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  }
+}
