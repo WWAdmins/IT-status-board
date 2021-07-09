@@ -1,16 +1,26 @@
 {
     "exCloudAPI" : {
-        "allDecives" : "https://cloud-ie.aerohive.com/xapi/v1/monitor/devices/"
+        "allDecives" : "https://cloud-ie.aerohive.com/xapi/v1/monitor/devices/",
+        "errorMsgPrefix" : "ExtremeCloud querry failed. "
     },
     "sharePointAPI" : {
-        "getList" : "https://wineworksgroup.sharepoint.com/library/_api/web/lists/GetByTitle('[list name here]')/items",
-        "replaceFlag" : "[list name here]",
         "itRegListName" : "IT Register",
-        "typeJson" : "application/json;odata=verbose",
-        "targetColumns" : "Id,Title,Priority,Status,Body,Awaiting_x0020_Action_x0020_By,Site,Created",
+        "targetColumns" : ["Id","Title","Priority","Status","Body","Awaiting_x0020_Action_x0020_By","Site","Created"],
+        "order" : {
+            "orderOn" : "Created",
+            "orderBy" : "desc"
+        },
         "filter" : {
             "status" : ["1","2","3","4"]
-        }
+        },
+        "errorMsgPrefix" : "Failed to retrieve IT Register from SharePoint. "
     },
-    "weekTime" : 18316800000
+    "errorMsgs" : {
+        "400" : "Bad request",
+        "401" : "Bad authentication",
+        "403" : "Bad authentication",
+        "404" : "We couldn't find what you are asking for",
+        "500" : "Something went wrong on their end",
+        "misc" : "Something went wrong"
+    }
 }

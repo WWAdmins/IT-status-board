@@ -2,50 +2,68 @@
     <div id="app">
         <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
         <b-button @click="update()" variant="danger">Update</b-button>
-        <b-button @click="verifyToken()" variant="danger">token</b-button>
-        <b-col cols=6>
-            <b-card 
-                class="item-card"
-                v-for="item in itRegList"
-                :key="'card' + item.Id"
-                @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
-                >
-                <b-row align-h="end">
-                    <b-col align-self="start" class="dotted">
-                        {{item.Title}}
-                    </b-col>
-                    <b-col cols=3>
-                        {{`Created: ${item.displayDate}`}}
-                    </b-col>
-                    <b-col cols=2 align-h="end" class="dotted">
-                        {{item.Site}}
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col cols=1>
-                        {{item.Id}}
-                    </b-col>
-                    <b-col cols=3>
-                        {{item.Status}}
-                    </b-col>
-                    <b-col cols=3>
-                        {{item.Awaiting_x0020_Action_x0020_By}}
-                    </b-col>
-                </b-row>
-                <b-collapse :id="'description' + item.Id" accordion="my-accordion">
-                    <p v-html="item.Body"></p>
-                </b-collapse>
-            </b-card>
-        </b-col>
+        <b-row>
+            <b-col cols=6>
+                <p v-if="itRegError">{{itRegError}}</p>
+                <b-card 
+                    class="item-card"
+                    v-for="item in itRegList"
+                    :key="'card' + item.Id"
+                    @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
+                    >
+                    <b-row align-h="end">
+                        <b-col align-self="start">
+                            {{item.Title}}
+                        </b-col>
+                        <b-col cols=3>
+                            {{`Created: ${item.displayDate}`}}
+                        </b-col>
+                        <b-col cols=2 align-h="end">
+                            {{item.Site}}
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col cols=1>
+                            {{item.Id}}
+                        </b-col>
+                        <b-col cols=3>
+                            {{item.Status}}
+                        </b-col>
+                        <b-col cols=3>
+                            {{item.Awaiting_x0020_Action_x0020_By}}
+                        </b-col>
+                    </b-row>
+                    <b-collapse :id="'description' + item.Id" accordion="my-accordion">
+                        <p v-html="item.Body"></p>
+                    </b-collapse>
+                </b-card>
+            </b-col>
+
+            <b-col>
+                <p v-if="exCloudError">{{exCloudError}}</p>
+                <b-card 
+                    class="item-card"
+                    v-for="device in deviceList"
+                    :key="'card' + device.ip + device.hostName"
+                    >
+                    <b-row>
+                        {{`${device.hostName} : ${device.ip}`}}
+                    </b-row>
+                    <b-row>
+                        {{`${device.locations[1]}  ${device.locations[3]}`}}
+                    </b-row>
+                </b-card>
+            </b-col>
+        </b-row>
     </div>
 </template>
 
 <script>
 
-import SECURE from "./assets/secure.json"; 
+// import SECURE from "./assets/secure.json"; 
 import CONSTANTS from "./assets/CONSTANTS.json"; 
 import axios from 'axios';
-import { DateTime } from 'luxon'
+import { DateTime } from 'luxon';
 
 export default {
     name: 'App',
@@ -53,60 +71,96 @@ export default {
     data () {
         return {
             deviceList : [],
-            itRegList : []
+            itRegList : [],
+            itRegError : null,
+            exCloudError : null
         }
     },
 
     async mounted() {
-
-        // await this.getExCloudDeviceList()
+        this.update()
     },
 
     methods: {
 
         async update() {
             await this.getItRegList()
-            // await this.getExCloudDeviceList()
+            await this.getExCloudDeviceList()
+        },
+
+        errorHandle(error, type) {
+
+            let errPrefix;
+            if (type == 'exCloud') {
+                errPrefix = CONSTANTS.exCloudAPI.errorMsgPrefix;
+            } else if (type == 'itReg') {
+                errPrefix = CONSTANTS.sharePointAPI.errorMsgPrefix;
+            }
+            const errMsgs = CONSTANTS.errorMsgs;
+            let errMsg;
+            switch(error.response.status) {
+                case 400:
+                    errMsg = errPrefix + errMsgs[400];
+                    break;
+                case 401:
+                    errMsg = errPrefix + errMsgs[401];
+                    break;
+                case 403:
+                    errMsg = errPrefix + errMsgs[403];
+                    break;
+                case 404:
+                    errMsg = errPrefix + errMsgs[404];
+                    break;
+                case 500:
+                    errMsg = errPrefix + errMsgs[500];
+                    break;
+                default:
+                    errMsg = errPrefix + errMsgs["misc"];
+            }
+
+            if (type == 'exCloud') {
+                this.exCloudError = errMsg;
+            } else if (type == 'itReg') {
+                this.itRegError = errMsg;
+            }
         },
 
         async getExCloudDeviceList() {
-                               
+
             let config = {
-                headers: {
-                    'Authorization': `Bearer ${SECURE.exCloud.token}`,
-                    "X-AH-API-CLIENT-SECRET" : SECURE.exCloud.clientSecret,
-                    "X-AH-API-CLIENT-ID" : SECURE.exCloud.clientId,
-                    "X-AH-API-CLIENT-REDIRECT-URI" : SECURE.exCloud.redirectUri
-                },
                 params: {
-                    ownerId : SECURE.exCloud.ownerId,
-                    showActiveClientCount : true,
                     page : 0,
-                    pageSize : 1000
-                },
+                    pageSize : 200
+                }
             }
 
-            await axios.get(CONSTANTS.exCloudAPI.allDecives, config).then(response => {
+            await axios.get("http://localhost:8000/ex_cloud", config).then(response => {
                 this.deviceList = response.data.data
-                // console.log(this.deviceList)
+                this.processExcloud()
+                this.exCloudError = null
             }).catch(error => {
-                console.log(error);
-                console.log(error.response.data.error.message);
+                this.errorHandle(error, "exCloud")
             });
+        },
+
+        processExcloud() {
+            this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
+            for (let device of this.deviceList) {
+                console.log(device)
+                if (device.locations == null) {
+                    device.locations = ['', 'unknown', '', 'unknown']
+                }
+            }
         },
 
         async getItRegList() {
 
-            // await this.verifyToken()
-            
-            const constConfig = CONSTANTS.sharePointAPI
+            const configSp = CONSTANTS.sharePointAPI
 
-            const getLink = constConfig.getList.replace(constConfig.replaceFlag, constConfig.itRegListName)
-
-            let filterString = "("
+            let filterString = ""
             var first = true
 
-            for (let key of constConfig.filter.status) {
+            for (let key of configSp.filter.status) {
                 if (!first) {
                     filterString += " or "
                 } else {
@@ -114,57 +168,25 @@ export default {
                 }
                 filterString += `startswith(Status,'${key}')`
             }
-            filterString += ")"
-                               
-            let config = {
-                headers: {
-                    'Authorization': `Bearer ${SECURE.sharePointAPI.token}`,
-                    "accept" : constConfig.typeJson,
-                    "content-type" : constConfig.typeJson
-                },
-                params: {
-                    $select : constConfig.targetColumns,
-                    $orderby : "Created desc",
-                    $filter : filterString
-                },
-            }
 
-            await axios.get(getLink, config).then(response => {
-                this.itRegList = response.data.d.results
+            let config = {
+                params: {
+                    select : configSp.targetColumns,
+                    orderOn : configSp.order.orderOn,
+                    orderBy: configSp.order.orderBy,
+                    filter : filterString,
+                    title: configSp.itRegListName
+                }
+            }
+            
+            await axios.get("http://localhost:8000/it_reg", config).then(response => {
+                this.itRegList = response.data
                 for (let item in this.itRegList) {
                     this.itRegList[item].displayDate = this.getDisplayDate(this.itRegList[item].Created)
                 }
+                this.itRegError = null
             }).catch(error => {
-                console.log(error);
-                console.log(error.response.data.error.message);
-            });
-        },
-
-        async verifyToken() {
-            const secrConfig = SECURE.sharePointAPI
-            const constConfig = CONSTANTS.sharePointAPI
-
-            const oAuthLink = secrConfig.oAuthLink.replace(secrConfig.replaceFlag, secrConfig.tenant)
-
-            const config = {
-                headers: {
-                    "accept" : constConfig.typeJson,
-                    "content-type" : constConfig.typeJson,
-                    "Access-Control-Allow-Origin" : '*'
-                }
-            }
-            const body = {
-                grant_type : secrConfig.grant_type,
-                client_id : `${secrConfig.clientId}@${secrConfig.tenant}`,
-                client_secret : secrConfig.client_secret,
-                resource : `${secrConfig.resource}/${secrConfig.domain}@${secrConfig.tenant}`
-            }
-
-            await axios.post(oAuthLink, body, config).then(response => {
-                console.log(response)
-            }).catch(error => {
-                console.log(error);
-                console.log(error.response.data.error.message);
+                this.errorHandle(error, "itReg")
             });
         },
 
