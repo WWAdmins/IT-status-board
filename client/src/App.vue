@@ -5,54 +5,64 @@
         <b-row>
             <b-col cols=6>
                 <p v-if="itRegError">{{itRegError}}</p>
-                <b-card 
-                    class="item-card"
-                    v-for="item in itRegList"
-                    :key="'card' + item.Id"
-                    @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
+                <b-row class="scrollable">
+                    <b-col 
+                        cols="6"
+                        v-for="item in itRegList"
+                        :key="'card' + item.Id"
+                        @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
                     >
-                    <b-row align-h="end">
-                        <b-col align-self="start">
-                            {{item.Title}}
-                        </b-col>
-                        <b-col cols=3>
-                            {{`Created: ${item.displayDate}`}}
-                        </b-col>
-                        <b-col cols=2 align-h="end">
-                            {{item.Site}}
-                        </b-col>
-                    </b-row>
-                    <b-row>
-                        <b-col cols=1>
-                            {{item.Id}}
-                        </b-col>
-                        <b-col cols=3>
-                            {{item.Status}}
-                        </b-col>
-                        <b-col cols=3>
-                            {{item.Awaiting_x0020_Action_x0020_By}}
-                        </b-col>
-                    </b-row>
-                    <b-collapse :id="'description' + item.Id" accordion="my-accordion">
-                        <p v-html="item.Body"></p>
-                    </b-collapse>
-                </b-card>
+                        <b-card class="item-card">
+                            <b-row align-h="start">
+                                <b-col class="item-title">
+                                    {{item.Title}}
+                                </b-col>
+                            </b-row>
+                            <b-row align-h="start">
+                                {{`${item.Status} ${item.Id}`}}
+                            </b-row>
+                            <b-row class="over">
+                                <p class="left-float">
+                                    {{`Created: ${item.displayDate}`}}
+                                </p>
+                                <p class="left-float">
+                                    {{item.Site}}
+                                </p>
+                                <p class="left-float">
+                                    {{item.Awaiting_x0020_Action_x0020_By}}
+                                </p>
+                            </b-row>
+                            <b-collapse :id="'description' + item.Id" accordion="my-accordion">
+                                <hr>
+                                <p v-html="item.Body"></p>
+                            </b-collapse>
+                        </b-card>
+
+                    </b-col>
+                </b-row>
             </b-col>
 
-            <b-col>
+            <b-col cols="6">
                 <p v-if="exCloudError">{{exCloudError}}</p>
-                <b-card 
-                    class="item-card"
-                    v-for="device in deviceList"
-                    :key="'card' + device.ip + device.hostName"
+                <b-row class="scrollable">
+                    <b-col
+                        cols="6"
+                        v-for="device in deviceList"
+                        :key="'card' + device.ip + device.hostName"
                     >
-                    <b-row>
-                        {{`${device.hostName} : ${device.ip}`}}
-                    </b-row>
-                    <b-row>
-                        {{`${device.locations[1]}  ${device.locations[3]}`}}
-                    </b-row>
-                </b-card>
+                        <b-card 
+                            class="device-card"
+                            v-bind:class="{ dissconnect: !device.connected}"
+                        >
+                            <b-row class="device-title">
+                                {{`${device.hostName} : ${device.ip}`}}
+                            </b-row>
+                            <b-row class="device-location">
+                                {{`${device.locations[1]} ${device.locations[3]}`}}
+                            </b-row>
+                        </b-card>
+                    </b-col>
+                </b-row>
             </b-col>
         </b-row>
     </div>
@@ -146,9 +156,9 @@ export default {
         processExcloud() {
             this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
             for (let device of this.deviceList) {
-                console.log(device)
+                // console.log(device)
                 if (device.locations == null) {
-                    device.locations = ['', 'unknown', '', 'unknown']
+                    device.locations = ['', 'location', '', 'unknown']
                 }
             }
         },
@@ -237,11 +247,37 @@ body{
 }
 
 .item-card {
-    border: 3px solid lightgray;
+    border: 2px solid  rgb(175, 175, 175) !important;
+    border-radius: 20px;
+    margin: 3% 1% 3% 1%;
+    box-shadow: 3px 3px #888888d0;
+    padding: 1% 3% 1% 3%;
+}
+
+.device-card {
+    border: 3px ridge rgb(53, 180, 3, 0.75) !important;
     border-radius: 20px;
     margin: 20px;
     box-shadow: 3px 3px #888888d0;
+    padding: 1% 3% 1% 3%;
 }
 
+.dissconnect {
+    border: 4px ridge rgb(255, 0, 0) !important;
+}
+
+.device-title {
+    font-weight: 600;
+}
+
+.item-title {
+     font-weight: 600;
+     text-align: start;
+     font-size: 110%;
+}
+
+.scrollable {
+    overflow-y: auto;
+}
 
 </style>
