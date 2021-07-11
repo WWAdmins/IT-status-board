@@ -91,11 +91,20 @@ async function getExCloudDeviceList(params) {
     return [isError, result]
 }
 
-async function getNotes(params) {
+async function getNotes() {
     console.log('Fetching notes')
 
     let isError = false;
     let result;
+
+    if(!fs.existsSync("notes.json")) {
+        try {
+            fs.writeFileSync('notes.json', JSON.stringify({}, null, 4), 'utf8')
+        } catch (err) {
+            result = err;
+            isError = true;
+        }
+    }
 
     try {
         const jsonString = fs.readFileSync("./notes.json");
@@ -119,6 +128,15 @@ async function addNote(req) {
     let noteJson;
     let result = "sucess"
 
+    if(!fs.existsSync("notes.json")) {
+        try {
+            fs.writeFileSync('notes.json', JSON.stringify({}, null, 4), 'utf8')
+        } catch (err) {
+            result = err;
+            isError = true;
+        }
+    }
+
     try {
         const jsonString = fs.readFileSync("./notes.json");
         noteJson = JSON.parse(jsonString);
@@ -132,7 +150,7 @@ async function addNote(req) {
     }
 
     const nextKey = (maxKey + 1)%SECURE.maxKeyVal
-
+    
     noteJson[nextKey] = newNote
 
     try {
@@ -169,7 +187,7 @@ app.get("/ex_cloud", async function(req, res) {
 });
 
 app.get("/notes", async function(req, res) {
-    const [isError, result] = await getNotes(req.query)
+    const [isError, result] = await getNotes()
     if (!isError) {
         res.status(200).send(result);
     } else {
