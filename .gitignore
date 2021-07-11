@@ -120,3 +120,4 @@ dist
 .tern-port
 src/assets/secure.json
 package-lock.json
+server/notes.json
