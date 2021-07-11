@@ -121,3 +121,4 @@ dist
 src/assets/secure.json
 package-lock.json
 server/notes.json
+server/secure.json
