@@ -10,5 +10,6 @@
         "sharePointLink" : "https://wineworksgroup.sharepoint.com/library/",
         "clientId" : "bae28fd7-4dd1-41c3-bfbf-593e1b1e1c35",
         "client_secret" : "4JyXdmxW8hXWHP9hw0kAYo+rnUItXebaEG3D2ZNbAe8="
-    }
+    },
+    "maxKeyVal" : 100
 }

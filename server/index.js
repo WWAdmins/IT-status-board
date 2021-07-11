@@ -9,18 +9,19 @@ const express = require("express");
 const path = require("path");
 const cors = require('cors');
 const axios = require('axios');
+const fs = require('fs')
 
 const SPFetchClient = require("@pnp/nodejs-commonjs").SPFetchClient;
 const sp = require("@pnp/sp-commonjs").sp;
 
-const SECURE = require('./secure.json')
-
+const SECURE = require('./secure.json');
 /**
  * App Variables
  */
 const app = express();
 const port = process.env.PORT || "8000";
 app.use(cors());
+app.use(express.json())
 
 
 sp.setup({
@@ -32,7 +33,7 @@ sp.setup({
 });
 
 async function getitReg(params) {
-    console.log('fetching IT register')
+    console.log('Fetching IT register')
 
     // make a request to get the web's details
     const w = await sp.web();
@@ -53,12 +54,12 @@ async function getitReg(params) {
         result = error
     })
 
-    console.log("returning IT register")
+    console.log("Returning IT register")
     return [isError, result]
 }
 
 async function getExCloudDeviceList(params) {
-    console.log('fetching device list')
+    console.log('Fetching device list')
                             
     let config = {
         headers: {
@@ -86,7 +87,63 @@ async function getExCloudDeviceList(params) {
         isError = true
     });
 
-    console.log("returning decive list")
+    console.log("Returning decive list")
+    return [isError, result]
+}
+
+async function getNotes(params) {
+    console.log('Fetching notes')
+
+    let isError = false;
+    let result;
+
+    try {
+        const jsonString = fs.readFileSync("./notes.json");
+        result = JSON.parse(jsonString);
+    } catch (err) {
+        result = err;
+        isError = true;
+    }
+
+    console.log('Returning notes')
+    return [isError, result]
+}
+
+async function addNote(req) {
+    console.log('Adding note')
+
+    const newNote = req.body.note
+
+    let isError = false;
+    let maxKey;
+    let noteJson;
+    let result = "sucess"
+
+    try {
+        const jsonString = fs.readFileSync("./notes.json");
+        noteJson = JSON.parse(jsonString);
+        maxKey = Math.max(...Object.keys(noteJson).map((i) => Number(i)))
+        if (maxKey == -Infinity) {
+            maxKey = -1
+        }
+    } catch (err) {
+        result = err;
+        isError = true;
+    }
+
+    const nextKey = (maxKey + 1)%SECURE.maxKeyVal
+
+    noteJson[nextKey] = newNote
+
+    try {
+        fs.writeFileSync('notes.json', JSON.stringify(noteJson, null, 4), 'utf8')
+        result = "Sucessfully added note"
+    } catch (err) {
+        result = err;
+        isError = true;
+    }
+
+    console.log('Returning notes')
     return [isError, result]
 }
 
@@ -108,6 +165,24 @@ app.get("/ex_cloud", async function(req, res) {
         res.status(200).send(result);
     } else {
         res.status(result.response.status).send(result.response.statusText);
+    }
+});
+
+app.get("/notes", async function(req, res) {
+    const [isError, result] = await getNotes(req.query)
+    if (!isError) {
+        res.status(200).send(result);
+    } else {
+        res.status(500).send(result);
+    }
+});
+
+app.post("/notes", async function(req, res) {
+    const [isError, result] = await addNote(req)
+    if (!isError) {
+        res.status(200).send(result);
+    } else {
+        res.status(500).send(result);
     }
 });
 

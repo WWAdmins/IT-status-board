@@ -88,7 +88,9 @@ export default {
     },
 
     async mounted() {
-        this.update()
+        await this.getNotes()
+        await this.addNote("testing new notes")
+        // this.update()
     },
 
     methods: {
@@ -150,6 +152,37 @@ export default {
                 this.exCloudError = null
             }).catch(error => {
                 this.errorHandle(error, "exCloud")
+            });
+        },
+
+        async getNotes() {
+
+            let config = {
+                params: {
+                    page : 0,
+                    pageSize : 200
+                }
+            }
+
+            await axios.get("http://localhost:8000/notes", config).then(response => {
+                console.log(response)
+            }).catch(error => {
+                console.log(error.response)
+                // this.errorHandle(error, "exCloud")
+            });
+        },
+
+        async addNote(noteText) {
+
+            let body = {
+                note: noteText
+            }
+
+            await axios.post("http://localhost:8000/notes", body).then(response => {
+                console.log(response)
+            }).catch(error => {
+                console.log(error.response)
+                // this.errorHandle(error, "exCloud")
             });
         },
 
