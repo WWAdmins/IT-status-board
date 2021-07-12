@@ -2,10 +2,30 @@
     <div id="app">
         <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
         <b-button @click="update()" variant="danger">Update</b-button>
-        <b-row>
+        <b-button v-b-modal.add-note-modal variant="primary">Add a note</b-button>
+        <b-row class="main-pane">
             <b-col cols=6>
+                <p v-if="noteError">{{noteError}}</p>
                 <p v-if="itRegError">{{itRegError}}</p>
-                <b-row class="scrollable">
+                <b-row class="list-pane">
+                    <!-- (let [noteKey, note] of Object.entries(this.notes)) -->
+                    <b-col
+                        cols="6"
+                        v-for="[noteKey, note] of Object.entries(this.notes)"
+                        :key="'note' + noteKey"
+                    >
+                        <b-card class="item-card">
+                            <b-row class="device-title">
+                                <b-col cols=10>
+                                    {{note}}
+                                </b-col>
+                                <b-col cols=2>
+                                    <b-button @click="deleteNote(noteKey)" variant="danger">X</b-button>
+                                </b-col>
+                            </b-row>
+                        </b-card>
+                    </b-col>
+
                     <b-col 
                         cols="6"
                         v-for="item in itRegList"
@@ -13,24 +33,31 @@
                         @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
                     >
                         <b-card class="item-card">
-                            <b-row align-h="start">
+                            <template #header class="card-header">
+                                <b-row>
+                                    <b-col class="text-start">
+                                        {{item.Status}}
+                                    </b-col>
+                                    <b-col class="text-end">
+                                        {{item.Id}}
+                                    </b-col>
+                                </b-row>
+                            </template>
+                            <b-row>
                                 <b-col class="item-title">
                                     {{item.Title}}
                                 </b-col>
                             </b-row>
-                            <b-row align-h="start">
-                                {{`${item.Status} ${item.Id}`}}
-                            </b-row>
                             <b-row class="over">
-                                <p class="left-float">
+                                <b-col cols=auto class="left-float">
                                     {{`Created: ${item.displayDate}`}}
-                                </p>
-                                <p class="left-float">
+                                </b-col>
+                                <b-col cols=auto class="left-float">
                                     {{item.Site}}
-                                </p>
-                                <p class="left-float">
+                                </b-col>
+                                <b-col cols=auto  class="left-float">
                                     {{item.Awaiting_x0020_Action_x0020_By}}
-                                </p>
+                                </b-col>
                             </b-row>
                             <b-collapse :id="'description' + item.Id" accordion="my-accordion">
                                 <hr>
@@ -44,7 +71,7 @@
 
             <b-col cols="6">
                 <p v-if="exCloudError">{{exCloudError}}</p>
-                <b-row class="scrollable">
+                <b-row class="list-pane">
                     <b-col
                         cols="6"
                         v-for="device in deviceList"
@@ -65,6 +92,15 @@
                 </b-row>
             </b-col>
         </b-row>
+        <b-modal id="add-note-modal" size="lg" title="Add a note" @ok="addNote()">
+            <b-form-textarea
+                id="textarea"
+                v-model="newNote"
+                placeholder="Enter a new note..."
+                rows="3"
+                max-rows="6"
+            ></b-form-textarea>
+        </b-modal>
     </div>
 </template>
 
@@ -82,31 +118,48 @@ export default {
         return {
             deviceList : [],
             itRegList : [],
+            notes: {},
+            noteError: null,
             itRegError : null,
-            exCloudError : null
+            exCloudError : null,
+            newNote : null
         }
     },
 
     async mounted() {
-        await this.getNotes()
-        await this.addNote("testing new notes")
-        // this.update()
+        this.update()
+
+        this.timer = setInterval(() => {
+            console.log("updating")
+            this.update()
+        }, CONSTANTS.refreshMinutes * 60000)
+    },
+
+    beforeDestroy() {
+    // Destroy timer before leaving the page
+      if(this.timer){
+        clearInterval(this.timer);
+      }
     },
 
     methods: {
 
         async update() {
-            await this.getItRegList()
-            await this.getExCloudDeviceList()
+            this.getNotes()
+            this.getItRegList()
+            this.getExCloudDeviceList()
+            
         },
 
-        errorHandle(error, type) {
+        errorHandle(error, service, type) {
 
             let errPrefix;
-            if (type == 'exCloud') {
+            if (service == 'exCloud') {
                 errPrefix = CONSTANTS.exCloudAPI.errorMsgPrefix;
             } else if (type == 'itReg') {
                 errPrefix = CONSTANTS.sharePointAPI.errorMsgPrefix;
+            } else if (type == 'notes') {
+                errPrefix = CONSTANTS.notes.errorMsgPrefix[type];
             }
             const errMsgs = CONSTANTS.errorMsgs;
             let errMsg;
@@ -130,10 +183,12 @@ export default {
                     errMsg = errPrefix + errMsgs["misc"];
             }
 
-            if (type == 'exCloud') {
+            if (service == 'exCloud') {
                 this.exCloudError = errMsg;
             } else if (type == 'itReg') {
                 this.itRegError = errMsg;
+            } else if (type == 'ntoes') {
+                this.noteError = errMsg;
             }
         },
 
@@ -151,7 +206,7 @@ export default {
                 this.processExcloud()
                 this.exCloudError = null
             }).catch(error => {
-                this.errorHandle(error, "exCloud")
+                this.errorHandle(error, "exCloud", 'get')
             });
         },
 
@@ -165,25 +220,47 @@ export default {
             }
 
             await axios.get("http://localhost:8000/notes", config).then(response => {
-                console.log(response)
+                this.notes = response.data
+                this.noteError = null
             }).catch(error => {
-                console.log(error.response)
-                // this.errorHandle(error, "exCloud")
+                this.errorHandle(error, "notes", 'get')
             });
         },
 
         async addNote(noteText) {
+
+            if (noteText == null) {
+                noteText = this.newNote
+                this.newNote = null
+            }
 
             let body = {
                 note: noteText
             }
 
             await axios.post("http://localhost:8000/notes", body).then(response => {
-                console.log(response)
+                console.log(response.data)
             }).catch(error => {
-                console.log(error.response)
-                // this.errorHandle(error, "exCloud")
+                this.errorHandle(error, "notes", 'post')
             });
+
+            await this.getNotes()
+        },
+
+        async deleteNote(noteKey) {
+            this.$delete(this.notes, noteKey)
+            
+            let body = {
+                key: noteKey
+            }
+
+            await axios.delete("http://localhost:8000/notes", {data : body}).then(response => {
+                console.log(response.data)
+            }).catch(error => {
+                this.errorHandle(error, "notes", 'delete')
+            });
+
+            await this.getNotes()
         },
 
         processExcloud() {
@@ -226,10 +303,13 @@ export default {
                 this.itRegList = response.data
                 for (let item in this.itRegList) {
                     this.itRegList[item].displayDate = this.getDisplayDate(this.itRegList[item].Created)
+                    if (this.itRegList[item].Awaiting_x0020_Action_x0020_By == null) {
+                        this.itRegList[item].Awaiting_x0020_Action_x0020_By = "Not assigned"
+                    }
                 }
                 this.itRegError = null
             }).catch(error => {
-                this.errorHandle(error, "itReg")
+                this.errorHandle(error, "itReg", 'get')
             });
         },
 
@@ -241,7 +321,14 @@ export default {
             if (dateStamp.hasSame(now, 'day')) {
                 // today
                 // Show hrs
-                displayDate = `${Math.floor(now.diff(dateStamp, 'hours').hours)} hours ago`
+                const hours = Math.floor(now.diff(dateStamp, 'hours').hours)
+                if (hours == 0) {
+                    displayDate = 'now'
+                } else if (hours == 1) {
+                    displayDate = `${Math.floor(now.diff(dateStamp, 'hours').hours)} hour ago`
+                } else {
+                    displayDate = `${Math.floor(now.diff(dateStamp, 'hours').hours)} hours ago`
+                }
             } else if (dateStamp.hasSame(now, 'year') && dateStamp.weekNumber == now.weekNumber) {
                 // this week
                 // Show day of week
@@ -279,18 +366,25 @@ body{
     border-style: dotted;
 }
 
+.main-pane {
+    padding: 20px;
+}
+
+.list-pane {
+    padding: 10px;
+}
+
 .item-card {
     border: 2px solid  rgb(175, 175, 175) !important;
     border-radius: 20px;
     margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
-    padding: 1% 3% 1% 3%;
 }
 
 .device-card {
     border: 3px ridge rgb(53, 180, 3, 0.75) !important;
     border-radius: 20px;
-    margin: 20px;
+    margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
     padding: 1% 3% 1% 3%;
 }
@@ -301,12 +395,33 @@ body{
 
 .device-title {
     font-weight: 600;
+    text-align: start;
+}
+
+.card-header {
+    background-color: rgb(119, 119, 119) !important;
+    color: white;
+    font-size: 120%;
+}
+
+.text-start {
+    text-align: start;
+}
+
+.text-end {
+    text-align: end;
 }
 
 .item-title {
-     font-weight: 600;
-     text-align: start;
-     font-size: 110%;
+    font-weight: 600;
+    text-align: start;
+    font-size: 110%;
+}
+
+.item-sub-title {
+    text-align: start;
+    font-size: 110%;
+    padding: 0% 0% 0% 5%;
 }
 
 .scrollable {

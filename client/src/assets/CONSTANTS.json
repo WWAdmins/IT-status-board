@@ -15,6 +15,13 @@
         },
         "errorMsgPrefix" : "Failed to retrieve IT Register from SharePoint. "
     },
+    "notes" : {
+        "errorMsgPrefix" : {
+            "get": "Failed to retrieve notes. ",
+            "post": "Failed to submit new note. ",
+            "delete": "Failed to delete note. "
+        }
+    },
     "errorMsgs" : {
         "400" : "Bad request",
         "401" : "Bad authentication",
@@ -22,5 +29,6 @@
         "404" : "We couldn't find what you are asking for",
         "500" : "Something went wrong on their end",
         "misc" : "Something went wrong"
-    }
+    },
+    "refreshMinutes" : 60
 }

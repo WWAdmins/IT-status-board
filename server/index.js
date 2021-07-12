@@ -121,11 +121,7 @@ async function getNotes() {
 async function addNote(req) {
     console.log('Adding note')
 
-    const newNote = req.body.note
-
     let isError = false;
-    let maxKey;
-    let noteJson;
     let result = "sucess"
 
     if(!fs.existsSync("notes.json")) {
@@ -134,8 +130,22 @@ async function addNote(req) {
         } catch (err) {
             result = err;
             isError = true;
+            console.log('Failed to generate new notes file')
+            return [isError, result]
         }
     }
+
+    const newNote = req.body.note
+    if (newNote == null) {
+        result = [400, 'No note found in request'];
+        isError = true;
+        console.log('No note found in request')
+        return [isError, result]
+    }
+
+    
+    let noteJson;
+    let maxKey;
 
     try {
         const jsonString = fs.readFileSync("./notes.json");
@@ -147,10 +157,11 @@ async function addNote(req) {
     } catch (err) {
         result = err;
         isError = true;
+        console.log('Failed to read notes file')
+        return [isError, result]
     }
 
     const nextKey = (maxKey + 1)%SECURE.maxKeyVal
-    
     noteJson[nextKey] = newNote
 
     try {
@@ -159,9 +170,64 @@ async function addNote(req) {
     } catch (err) {
         result = err;
         isError = true;
+        
+        console.log('Failed to write notes file')
+        return [isError, result]
     }
 
     console.log('Returning notes')
+    return [isError, result]
+}
+
+async function deleteNote(req) {
+    console.log('Deleting note')
+
+    // console.log(req)
+    const key = req.body.key
+
+    let isError = false;
+    let result = "sucess"
+
+    if(!fs.existsSync("notes.json")) {
+        result = "No notes exist";
+        isError = true;
+        console.log('No existing notes')
+        return [isError, result]
+    }
+
+    let noteJson;
+
+    try {
+        const jsonString = fs.readFileSync("./notes.json");
+        noteJson = JSON.parse(jsonString);
+    } catch (err) {
+        result = err;
+        isError = true;
+        console.log('Failed to read notes file')
+        return [isError, result]
+    }
+
+    if (noteJson[key] == null) {
+        result = [404, 'Failed to find note with id: ' + key];
+        isError = true;
+        console.log('Failed to find note with id: ' + key)
+        return [isError, result]
+    }
+    
+    delete noteJson[key]
+
+    try {
+        fs.writeFileSync('notes.json', JSON.stringify(noteJson, null, 4), 'utf8')
+        result = "Sucessfully added note"
+    } catch (err) {
+        result = err;
+        isError = true;
+        
+        console.log('Failed to write notes file')
+        return [isError, result]
+    }
+
+    console.log('Deleteed note with id: ' + key)
     return [isError, result]
 }
 
@@ -200,7 +266,24 @@ app.post("/notes", async function(req, res) {
     if (!isError) {
         res.status(200).send(result);
     } else {
-        res.status(500).send(result);
+        if (result[0] == 400) {
+            res.status(result[0]).send(result[1]);
+        } else {
+            res.status(500).send(result);
+        }
+    }
+});
+
+app.delete("/notes", async function(req, res) {
+    const [isError, result] = await deleteNote(req)
+    if (!isError) {
+        res.status(200).send(result);
+    } else {
+        if (result[0] == 404) {
+            res.status(result[0]).send(result[1]);
+        } else {
+            res.status(500).send(result);
+        }
     }
 });
 
