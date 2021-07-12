@@ -5,16 +5,60 @@
         <b-button v-b-modal.add-note-modal variant="primary">Add a note</b-button>
         <b-row class="main-pane">
             <b-col cols=6>
+                    <p v-if="itRegError">{{itRegError}}</p>
+                    <b-row class="list-pane">
+                        <b-col 
+                            cols="6"
+                            v-for="item in itRegList"
+                            :key="'card' + item.Id"
+                            @click="showModal(item)"
+                        >
+                            <b-card class="item-card">
+                                <template #header class="card-header">
+                                    <b-row>
+                                        <b-col cols=8 class="text-start dot-wrap">
+                                            {{item.Status}}
+                                        </b-col>
+                                        <b-col cols=4 class="text-end">
+                                            {{item.Id}}
+                                        </b-col>
+                                    </b-row>
+                                </template>
+                                <b-row>
+                                    <b-col class="item-title dot-wrap">
+                                        {{item.Title}}
+                                    </b-col>
+                                </b-row>
+                                <b-row class="sub-title-box">
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{`Created: ${item.displayDate}`}}
+                                    </b-col>
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{item.Site}}
+                                    </b-col>
+                                    <b-col cols=auto  class="left-float">
+                                        {{item.Awaiting_x0020_Action_x0020_By}}
+                                    </b-col>
+                                </b-row>
+                                <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title">
+                                    <p v-html="item.Body"></p>
+                                </b-modal>
+                            </b-card>
+
+                        </b-col>
+                    </b-row>
+            </b-col>
+
+            <b-col cols="6">
                 <p v-if="noteError">{{noteError}}</p>
-                <p v-if="itRegError">{{itRegError}}</p>
+                <p v-if="exCloudError">{{exCloudError}}</p>
                 <b-row class="list-pane">
-                    <!-- (let [noteKey, note] of Object.entries(this.notes)) -->
                     <b-col
                         cols="6"
                         v-for="[noteKey, note] of Object.entries(this.notes)"
                         :key="'note' + noteKey"
                     >
-                        <b-card class="item-card">
+                        <b-card class="note-card">
                             <b-row class="device-title">
                                 <b-col cols=10>
                                     {{note}}
@@ -26,52 +70,6 @@
                         </b-card>
                     </b-col>
 
-                    <b-col 
-                        cols="6"
-                        v-for="item in itRegList"
-                        :key="'card' + item.Id"
-                        @click="$root.$emit('bv::toggle::collapse', `description${item.Id}`)"
-                    >
-                        <b-card class="item-card">
-                            <template #header class="card-header">
-                                <b-row>
-                                    <b-col class="text-start">
-                                        {{item.Status}}
-                                    </b-col>
-                                    <b-col class="text-end">
-                                        {{item.Id}}
-                                    </b-col>
-                                </b-row>
-                            </template>
-                            <b-row>
-                                <b-col class="item-title">
-                                    {{item.Title}}
-                                </b-col>
-                            </b-row>
-                            <b-row class="over">
-                                <b-col cols=auto class="left-float">
-                                    {{`Created: ${item.displayDate}`}}
-                                </b-col>
-                                <b-col cols=auto class="left-float">
-                                    {{item.Site}}
-                                </b-col>
-                                <b-col cols=auto  class="left-float">
-                                    {{item.Awaiting_x0020_Action_x0020_By}}
-                                </b-col>
-                            </b-row>
-                            <b-collapse :id="'description' + item.Id" accordion="my-accordion">
-                                <hr>
-                                <p v-html="item.Body"></p>
-                            </b-collapse>
-                        </b-card>
-
-                    </b-col>
-                </b-row>
-            </b-col>
-
-            <b-col cols="6">
-                <p v-if="exCloudError">{{exCloudError}}</p>
-                <b-row class="list-pane">
                     <b-col
                         cols="6"
                         v-for="device in deviceList"
@@ -81,10 +79,10 @@
                             class="device-card"
                             v-bind:class="{ dissconnect: !device.connected}"
                         >
-                            <b-row class="device-title">
+                            <b-row class="device-title dot-wrap">
                                 {{`${device.hostName} : ${device.ip}`}}
                             </b-row>
-                            <b-row class="device-location">
+                            <b-row class="device-location  dot-wrap">
                                 {{`${device.locations[1]} ${device.locations[3]}`}}
                             </b-row>
                         </b-card>
@@ -106,13 +104,17 @@
 
 <script>
 
-// import SECURE from "./assets/secure.json"; 
 import CONSTANTS from "./assets/CONSTANTS.json"; 
 import axios from 'axios';
 import { DateTime } from 'luxon';
+// import vuescroll from 'vuescroll';
 
 export default {
     name: 'App',
+
+    components: {
+    //   vuescroll
+    },
 
     data () {
         return {
@@ -122,17 +124,18 @@ export default {
             noteError: null,
             itRegError : null,
             exCloudError : null,
-            newNote : null
+            newNote : null,
+            toastCount: 0
         }
     },
 
     async mounted() {
         this.update()
 
-        this.timer = setInterval(() => {
-            console.log("updating")
-            this.update()
-        }, CONSTANTS.refreshMinutes * 60000)
+        // this.timer = setInterval(() => {
+        //     console.log("updating")
+        //     this.update()
+        // }, CONSTANTS.refreshMinutes * 60000)
     },
 
     beforeDestroy() {
@@ -143,6 +146,24 @@ export default {
     },
 
     methods: {
+
+        showModal(item) {
+            if (item.Body) {
+                this.$bvModal.show(`description${item.Id}modal`)
+            } else {
+                this.makeInfoToast("This ticket does not currently have a description", "info")
+            }
+        },
+
+        makeInfoToast(text, varient) {
+            this.$toast.open({
+                message : text,
+                type : varient,
+                position : "bottom-left",
+                duration : 3000,
+                dismissible : false
+            });
+        },
 
         async update() {
             this.getNotes()
@@ -190,24 +211,6 @@ export default {
             } else if (type == 'ntoes') {
                 this.noteError = errMsg;
             }
-        },
-
-        async getExCloudDeviceList() {
-
-            let config = {
-                params: {
-                    page : 0,
-                    pageSize : 200
-                }
-            }
-
-            await axios.get("http://localhost:8000/ex_cloud", config).then(response => {
-                this.deviceList = response.data.data
-                this.processExcloud()
-                this.exCloudError = null
-            }).catch(error => {
-                this.errorHandle(error, "exCloud", 'get')
-            });
         },
 
         async getNotes() {
@@ -263,14 +266,33 @@ export default {
             await this.getNotes()
         },
 
-        processExcloud() {
-            this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
-            for (let device of this.deviceList) {
+        async getExCloudDeviceList() {
+
+            let config = {
+                params: {
+                    page : 0,
+                    pageSize : 200
+                }
+            }
+
+            await axios.get("http://localhost:8000/ex_cloud", config).then(response => {
+                this.processExcloud(response.data.data)
+                this.exCloudError = null
+            }).catch(error => {
+                this.errorHandle(error, "exCloud", 'get')
+            });
+            console.log('fetched')
+        },
+
+        processExcloud(devices) {
+            devices.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
+            for (let device of devices) {
                 // console.log(device)
                 if (device.locations == null) {
                     device.locations = ['', 'location', '', 'unknown']
                 }
             }
+            this.deviceList = devices
         },
 
         async getItRegList() {
@@ -300,7 +322,7 @@ export default {
             }
             
             await axios.get("http://localhost:8000/it_reg", config).then(response => {
-                this.itRegList = response.data
+                this.itRegList = response.data.slice(0,5)
                 for (let item in this.itRegList) {
                     this.itRegList[item].displayDate = this.getDisplayDate(this.itRegList[item].Created)
                     if (this.itRegList[item].Awaiting_x0020_Action_x0020_By == null) {
@@ -350,7 +372,7 @@ body{
     background-attachment: fixed;
     /* background-size: cover; */
     background-position: center;
-    min-width: 350px;
+    min-width: 1300px;
 }
 
 #app {
@@ -379,6 +401,14 @@ body{
     border-radius: 20px;
     margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
+    height: 160px;
+}
+
+.note-card {
+    border: 2px solid  rgb(175, 175, 175) !important;
+    border-radius: 20px;
+    margin: 3% 1% 3% 1%;
+    box-shadow: 3px 3px #888888d0;
 }
 
 .device-card {
@@ -387,6 +417,7 @@ body{
     margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
     padding: 1% 3% 1% 3%;
+    height: 95px;
 }
 
 .dissconnect {
@@ -424,8 +455,18 @@ body{
     padding: 0% 0% 0% 5%;
 }
 
-.scrollable {
-    overflow-y: auto;
+.dot-wrap {
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    white-space: nowrap;
+}
+
+.left-float {
+    display: inline-block;
+}
+
+.sub-title-box {
+    height: 50px;
 }
 
 </style>
