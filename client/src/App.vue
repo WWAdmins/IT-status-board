@@ -7,13 +7,13 @@
             <b-col cols=6>
                     <p v-if="itRegError">{{itRegError}}</p>
                     <b-row class="list-pane">
-                        <b-col 
-                            cols="6"
-                            v-for="item in itRegList"
-                            :key="'card' + item.Id"
-                            @click="showModal(item)"
-                        >
-                            <b-card class="item-card">
+                        <b-col cols="6">
+                            <b-card 
+                                class="item-card"
+                                v-for="item in itRegListA"
+                                :key="'card' + item.Id"
+                                @click="showModal(item)"
+                            >
                                 <template #header class="card-header">
                                     <b-row>
                                         <b-col cols=8 class="text-start dot-wrap">
@@ -44,7 +44,44 @@
                                     <p v-html="item.Body"></p>
                                 </b-modal>
                             </b-card>
-
+                        </b-col>
+                        <b-col cols="6">
+                            <b-card 
+                                class="item-card"
+                                v-for="item in itRegListB"
+                                :key="'card' + item.Id"
+                                @click="showModal(item)"
+                            >
+                                <template #header class="card-header">
+                                    <b-row>
+                                        <b-col cols=8 class="text-start dot-wrap">
+                                            {{item.Status}}
+                                        </b-col>
+                                        <b-col cols=4 class="text-end">
+                                            {{item.Id}}
+                                        </b-col>
+                                    </b-row>
+                                </template>
+                                <b-row>
+                                    <b-col class="item-title dot-wrap">
+                                        {{item.Title}}
+                                    </b-col>
+                                </b-row>
+                                <b-row class="sub-title-box">
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{`Created: ${item.displayDate}`}}
+                                    </b-col>
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{item.Site}}
+                                    </b-col>
+                                    <b-col cols=auto  class="left-float">
+                                        {{item.Awaiting_x0020_Action_x0020_By}}
+                                    </b-col>
+                                </b-row>
+                                <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title">
+                                    <p v-html="item.Body"></p>
+                                </b-modal>
+                            </b-card>
                         </b-col>
                     </b-row>
             </b-col>
@@ -53,12 +90,12 @@
                 <p v-if="noteError">{{noteError}}</p>
                 <p v-if="exCloudError">{{exCloudError}}</p>
                 <b-row class="list-pane">
-                    <b-col
-                        cols="6"
-                        v-for="[noteKey, note] of Object.entries(this.notes)"
-                        :key="'note' + noteKey"
-                    >
-                        <b-card class="note-card">
+                    <b-col cols="6">
+                        <b-card 
+                            v-for="[noteKey, note] of this.notesA"
+                            :key="'note' + noteKey"
+                            class="note-card"
+                        >
                             <b-row class="device-title">
                                 <b-col cols=10>
                                     {{note}}
@@ -69,15 +106,45 @@
                             </b-row>
                         </b-card>
                     </b-col>
-
-                    <b-col
-                        cols="6"
-                        v-for="device in deviceList"
-                        :key="'card' + device.ip + device.hostName"
-                    >
+                    <b-col cols="6">
+                        <b-card 
+                            v-for="[noteKey, note] of this.notesB"
+                            :key="'note' + noteKey"
+                            class="note-card"
+                        >
+                            <b-row class="device-title">
+                                <b-col cols=10>
+                                    {{note}}
+                                </b-col>
+                                <b-col cols=2>
+                                    <b-button @click="deleteNote(noteKey)" variant="danger">X</b-button>
+                                </b-col>
+                            </b-row>
+                        </b-card>
+                    </b-col>
+                </b-row>
+                <b-row class="list-pane">
+                    <b-col cols="6">
                         <b-card 
                             class="device-card"
                             v-bind:class="{ dissconnect: !device.connected}"
+                            v-for="device in deviceListA"
+                            :key="'card' + device.ip + device.hostName"
+                        >
+                            <b-row class="device-title dot-wrap">
+                                {{`${device.hostName} : ${device.ip}`}}
+                            </b-row>
+                            <b-row class="device-location  dot-wrap">
+                                {{`${device.locations[1]} ${device.locations[3]}`}}
+                            </b-row>
+                        </b-card>
+                    </b-col>
+                    <b-col cols="6">
+                        <b-card 
+                            class="device-card"
+                            v-bind:class="{ dissconnect: !device.connected}"
+                            v-for="device in deviceListB"
+                            :key="'card' + device.ip + device.hostName"
                         >
                             <b-row class="device-title dot-wrap">
                                 {{`${device.hostName} : ${device.ip}`}}
@@ -116,6 +183,45 @@ export default {
     //   vuescroll
     },
 
+    computed: {
+        itRegListA: function() {
+            const splitList = this.itRegList.filter((item, index) => {
+                return index % 2 == 0
+            })
+            return splitList
+        },
+        itRegListB: function() {
+            const splitList = this.itRegList.filter((item, index) => {
+                return index % 2 == 1
+            })
+            return splitList
+        },
+        notesA: function() {
+            const splitList = Object.entries(this.notes).filter((item, index) => {
+                return index % 2 == 0
+            })
+            return splitList
+        },
+        notesB: function() {
+            const splitList = Object.entries(this.notes).filter((item, index) => {
+                return index % 2 == 1
+            })
+            return splitList
+        },
+        deviceListA: function() {
+            const splitList = this.deviceList.filter((item, index) => {
+                return index % 2 == 0
+            })
+            return splitList
+        },
+        deviceListB: function() {
+            const splitList = this.deviceList.filter((item, index) => {
+                return index % 2 == 1
+            })
+            return splitList
+        }
+    },
+
     data () {
         return {
             deviceList : [],
@@ -151,11 +257,11 @@ export default {
             if (item.Body) {
                 this.$bvModal.show(`description${item.Id}modal`)
             } else {
-                this.makeInfoToast("This ticket does not currently have a description", "info")
+                this.makeToast("This ticket does not currently have a description", "info")
             }
         },
 
-        makeInfoToast(text, varient) {
+        makeToast(text, varient) {
             this.$toast.open({
                 message : text,
                 type : varient,
@@ -242,7 +348,7 @@ export default {
             }
 
             await axios.post("http://localhost:8000/notes", body).then(response => {
-                console.log(response.data)
+                this.makeToast(response.data, 'success')
             }).catch(error => {
                 this.errorHandle(error, "notes", 'post')
             });
@@ -258,7 +364,7 @@ export default {
             }
 
             await axios.delete("http://localhost:8000/notes", {data : body}).then(response => {
-                console.log(response.data)
+                this.makeToast(response.data, 'success')
             }).catch(error => {
                 this.errorHandle(error, "notes", 'delete')
             });
@@ -393,7 +499,7 @@ body{
 }
 
 .list-pane {
-    padding: 10px;
+    padding: 0px 10px 0px 10px;
 }
 
 .item-card {

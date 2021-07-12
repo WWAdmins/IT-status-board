@@ -218,7 +218,7 @@ async function deleteNote(req) {
 
     try {
         fs.writeFileSync('notes.json', JSON.stringify(noteJson, null, 4), 'utf8')
-        result = "Sucessfully added note"
+        result = "Sucessfully deleted note"
     } catch (err) {
         result = err;
         isError = true;
