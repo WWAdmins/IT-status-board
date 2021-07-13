@@ -29,5 +29,5 @@
         "500" : "Something went wrong on their end",
         "misc" : "Something went wrong"
     },
-    "refreshMinutes" : 60
+    "refreshMinutes" : 15
 }

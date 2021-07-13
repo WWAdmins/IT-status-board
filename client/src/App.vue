@@ -1,26 +1,25 @@
 <template>
     <div id="app">
         <b-row class="nav">
-            <b-col cols=7>
-                <label class="page-title">WineWorks IT status board</label>
-            </b-col>
-            <b-col cols=2>
-                <label class="page-sub-title">{{`Last updated: ${lastUpdated}`}}</label>
-            </b-col>
-            <b-col cols=3>
-                <b-row align-v="end">
-                    <b-col>
-                        <b-button @click="update()" variant="danger">
-                            <b-spinner v-if="loadingItReg || loadingNotes || loadingDevices" variant=light small></b-spinner> Update
-                        </b-button>
+            <b-col cols=8 class="mr-auto">
+                <b-row align-v="start">
+                    <b-col cols=4>
+                        <label class="page-title">WineWorks IT status board</label>
                     </b-col>
-                    <b-col>
-                        <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''">Add a note</b-button>
-                    </b-col>
-                    <b-col>
-                        <b-button @click="showHidden = !showHidden">Show hidden</b-button>
+                    <b-col cols=5 class="ticket-title">
+                        {{`Total tickets: ${itRegList.length} | High: ${ticketPriorities[1]} Normal: ${ticketPriorities[2]} Low: ${ticketPriorities[3]}`}}
                     </b-col>
                 </b-row>
+            </b-col>
+            <b-col cols=4 class="right-push">
+                <b-button-group>
+                    <label class="page-sub-title">{{`Last updated: ${lastUpdated}`}}</label>
+                    <b-button @click="update()" variant="danger" class="nav-button">
+                        <b-spinner v-if="loadingItReg || loadingNotes || loadingDevices" variant=light small></b-spinner> Update
+                    </b-button>
+                    <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''" class="nav-button">Add a note</b-button>
+                    <b-button @click="showHidden = !showHidden" class="nav-button">Show hidden</b-button>
+                </b-button-group>
             </b-col>
         </b-row>
         
@@ -46,16 +45,24 @@
                             <b-card 
                                 class="item-card"
                                 @click="showModal(regItem)"
+                                v-bind:class="{ pulse : regItem.Id == oldestTcketId }"
                             >
-                                <template #header>
-                                    <b-row>
-                                        <b-col cols=8 class="text-start dot-wrap">
-                                            {{regItem.Status}}
-                                        </b-col>
-                                        <b-col cols=4 class="text-end">
-                                            {{regItem.Id}}
-                                        </b-col>
-                                    </b-row>
+                                <template #header class="high">
+                                    <div v-bind:class="{ 
+                                        high : regItem.Priority[1] == 1, 
+                                        normal : regItem.Priority[1] == 2, 
+                                        low : regItem.Priority[1] == 3 
+                                        }"
+                                    >
+                                        <b-row>
+                                            <b-col cols=8 class="text-start dot-wrap">
+                                                {{regItem.Status}}
+                                            </b-col>
+                                            <b-col cols=4 class="text-end">
+                                                {{regItem.Id}}
+                                            </b-col>
+                                        </b-row>
+                                    </div>
                                 </template>
                                 <b-row>
                                     <b-col class="item-title dot-wrap">
@@ -138,7 +145,7 @@
                         
                             <b-card 
                                 class="device-card"
-                                v-bind:class="{ dissconnect: !device.connected}"
+                                v-bind:class="{ dissconnect: !device.connected }"
                                 @contextmenu.prevent.stop="handleClick1($event, device)"
                             >
                                 <b-row class="device-title dot-wrap">
@@ -217,14 +224,15 @@
 import CONSTANTS from "./assets/CONSTANTS.json"; 
 import axios from 'axios';
 import { DateTime } from 'luxon';
-// import vuescroll from 'vuescroll';
+
+Array.prototype.getMin = function(attrib) {
+    return (this.length && this.reduce(function(prev, curr){ 
+        return prev[attrib] < curr[attrib] ? prev : curr; 
+    })) || null;
+}
 
 export default {
     name: 'App',
-
-    components: {
-    //   vuescroll
-    },
 
     computed: {
         itRegDoubles: function() {
@@ -290,11 +298,15 @@ export default {
             loadingNotes : false,
             lastUpdated : null,
             
-            showHidden : false
+            showHidden : false,
+
+            oldestTcketId : null,
+            ticketPriorities : { 1 : 0, 2 : 0, 3 : 0 }
         }
     },
 
     async mounted() {
+        console.log(this.window)
         this.update()
 
         this.timer = setInterval(() => {
@@ -371,6 +383,7 @@ export default {
             }
             const errMsgs = CONSTANTS.errorMsgs;
             let errMsg;
+            console.log(error)
             switch(error.response.status) {
                 case 400:
                     errMsg = errPrefix + errMsgs[400];
@@ -527,20 +540,37 @@ export default {
             }
             
             await axios.get("http://localhost:8000/it_reg", config).then(response => {
-                this.itRegList = response.data
-                for (let item in this.itRegList) {
-                    this.itRegList[item].displayDate = this.getDisplayDate(this.itRegList[item].Created)
-                    if (this.itRegList[item].Awaiting_x0020_Action_x0020_By == null) {
-                        this.itRegList[item].Awaiting_x0020_Action_x0020_By = "Not assigned"
-                    }
-                }
+                this.itRegList = this.processItReg(response.data)
                 this.itRegError = null
-                console.log(this.itRegList)
             }).catch(error => {
                 this.errorHandle(error, "itReg", 'get')
             });
 
             this.loadingItReg = false
+        },
+
+        processItReg(itRegPreList) {
+            this.ticketPriorities = { 1 : 0, 2 : 0, 3 : 0 }
+            for (let item of itRegPreList) {
+                item.displayDate = this.getDisplayDate(item.Created)
+                if (item.Awaiting_x0020_Action_x0020_By == null) {
+                    item.Awaiting_x0020_Action_x0020_By = "Not assigned"
+                }
+                this.ticketPriorities[item.Priority[1]] += 1
+            }
+            itRegPreList.sort((a, b) => {
+                if (a.Priority[1] > b.Priority[1]) {
+                    return 1
+                } else if (a.Priority[1] < b.Priority[1]) {
+                    return -1
+                } else {
+                    return a.Created > b.Created
+                }
+            })
+
+            this.oldestTcketId = itRegPreList.getMin('Created').Id
+
+            return itRegPreList
         },
 
         getDisplayDate(dateTimeStamp) {
@@ -606,15 +636,36 @@ body{
 
 .page-title {
     color: white;
-    font-size: 130%;
+    font-size: 150%;
     font-weight: 700;
     float: left;
     margin: 10px;
+    padding-left: 10px;
+}
+
+.ticket-title {
+    color: white;
+    font-size: 130%;
+    font-weight: 700;
+    float: right;
+    margin: 13px 0px 0px 25px !important;
+    padding-left: 10px;
 }
 
 .page-sub-title {
     color: white;
     margin: 10px;
+    margin-right: 30px;
+}
+
+.nav-button {
+    margin-left: 5px !important;
+    border-radius: 3px !important;
+}
+
+.right-push {
+    padding-right: 5px;
+    margin-right: -30px;
 }
 
 .dotted {
@@ -634,7 +685,6 @@ body{
 }
 
 .item-card {
-    border: 2px solid  rgb(175, 175, 175) !important;
     border-radius: 20px;
     margin: 10px 5px 10px 5px;
     box-shadow: 3px 3px #888888d0;
@@ -672,19 +722,28 @@ body{
     font-size: 120%;
 }
 
-.high-pri {
-    background-color: red !important;
-    color: white !important;
+.high {
+    background-color: red !important; 
+    margin: -9px -17px -9px -17px;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
 }
 
-.normal-pri {
-    background-color: yellow !important;
-    color: darkgray !important;
+.normal {
+    background-color: #ffdb00 !important;
+    margin: -9px -17px -9px -17px;
+    padding: 10px;
+    border-radius: 5px;
+    color: black;
 }
 
-.low-pri {
-    background-color: green !important;
-    color: darkgray !important;
+.low {
+    background-color: #00a500 !important;
+    margin: -9px -17px -9px -17px;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
 }
 
 .text-start {
@@ -728,6 +787,30 @@ body{
 ::-webkit-scrollbar {
     width: 0px;
     height: 0px;
+}
+
+
+.pulse {
+  animation: pulse 3s ease-out infinite;
+}
+
+.pulse:hover {
+  animation: none;
+}
+
+@keyframes pulse {
+  0% {
+    -moz-box-shadow: 0 0 0 0 rgba(235, 72, 8, 0.8);
+    box-shadow: 0 0 0 0 rgba(235, 72, 8, 0.6);
+  }
+  70% {
+      -moz-box-shadow: 0 0 0 10px rgba(235, 72, 8, 0);
+      box-shadow: 0 0 0 10px rgba(235, 72, 8, 0);
+  }
+  100% {
+      -moz-box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
+      box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
+  }
 }
 
 </style>
