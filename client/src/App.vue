@@ -2,86 +2,98 @@
     <div id="app">
         <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
         <b-button @click="update()" variant="danger">Update</b-button>
-        <b-button v-b-modal.add-note-modal variant="primary">Add a note</b-button>
+        <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''">Add a note</b-button>
         <b-row class="main-pane">
             <b-col cols=6>
                     <p v-if="itRegError">{{itRegError}}</p>
                     <b-row class="list-pane">
                         <b-col cols="6">
-                            <b-card 
-                                class="item-card"
-                                v-for="item in itRegListA"
-                                :key="'card' + item.Id"
-                                @click="showModal(item)"
+                            <RecycleScroller
+                                class="scroller"
+                                :items="itRegListA"
+                                :item-size="180"
+                                key-field=Id
+                                v-slot="{ item }"
                             >
-                                <template #header class="card-header">
+                                <b-card 
+                                    class="item-card"
+                                    @click="showModal(item)"
+                                >
+                                    <template #header class="card-header">
+                                        <b-row>
+                                            <b-col cols=8 class="text-start dot-wrap">
+                                                {{item.Status}}
+                                            </b-col>
+                                            <b-col cols=4 class="text-end">
+                                                {{item.Id}}
+                                            </b-col>
+                                        </b-row>
+                                    </template>
                                     <b-row>
-                                        <b-col cols=8 class="text-start dot-wrap">
-                                            {{item.Status}}
-                                        </b-col>
-                                        <b-col cols=4 class="text-end">
-                                            {{item.Id}}
+                                        <b-col class="item-title dot-wrap">
+                                            {{item.Title}}
                                         </b-col>
                                     </b-row>
-                                </template>
-                                <b-row>
-                                    <b-col class="item-title dot-wrap">
-                                        {{item.Title}}
-                                    </b-col>
-                                </b-row>
-                                <b-row class="sub-title-box">
-                                    <b-col cols=auto class="left-float dot-wrap">
-                                        {{`Created: ${item.displayDate}`}}
-                                    </b-col>
-                                    <b-col cols=auto class="left-float dot-wrap">
-                                        {{item.Site}}
-                                    </b-col>
-                                    <b-col cols=auto  class="left-float">
-                                        {{item.Awaiting_x0020_Action_x0020_By}}
-                                    </b-col>
-                                </b-row>
-                                <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title">
-                                    <p v-html="item.Body"></p>
-                                </b-modal>
-                            </b-card>
+                                    <b-row class="sub-title-box">
+                                        <b-col cols=auto class="left-float dot-wrap">
+                                            {{`Created: ${item.displayDate}`}}
+                                        </b-col>
+                                        <b-col cols=auto class="left-float dot-wrap">
+                                            {{item.Site}}
+                                        </b-col>
+                                        <b-col cols=auto  class="left-float">
+                                            {{item.Awaiting_x0020_Action_x0020_By}}
+                                        </b-col>
+                                    </b-row>
+                                    <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title" ok-only>
+                                        <p v-html="item.Body"></p>
+                                    </b-modal>
+                                </b-card>
+                            </RecycleScroller>
                         </b-col>
                         <b-col cols="6">
-                            <b-card 
-                                class="item-card"
-                                v-for="item in itRegListB"
-                                :key="'card' + item.Id"
-                                @click="showModal(item)"
+                            <RecycleScroller
+                                class="scroller"
+                                :items="itRegListB"
+                                :item-size="180"
+                                key-field=Id
+                                v-slot="{ item }"
                             >
-                                <template #header class="card-header">
+                                <b-card 
+                                    class="item-card"
+                                    @click="showModal(item)"
+                                >
+                                    <template #header class="card-header">
+                                        <b-row>
+                                            <b-col cols=8 class="text-start dot-wrap">
+                                                {{item.Status}}
+                                            </b-col>
+                                            <b-col cols=4 class="text-end">
+                                                {{item.Id}}
+                                            </b-col>
+                                        </b-row>
+                                    </template>
                                     <b-row>
-                                        <b-col cols=8 class="text-start dot-wrap">
-                                            {{item.Status}}
-                                        </b-col>
-                                        <b-col cols=4 class="text-end">
-                                            {{item.Id}}
+                                        <b-col class="item-title dot-wrap">
+                                            {{item.Title}}
                                         </b-col>
                                     </b-row>
-                                </template>
-                                <b-row>
-                                    <b-col class="item-title dot-wrap">
-                                        {{item.Title}}
-                                    </b-col>
-                                </b-row>
-                                <b-row class="sub-title-box">
-                                    <b-col cols=auto class="left-float dot-wrap">
-                                        {{`Created: ${item.displayDate}`}}
-                                    </b-col>
-                                    <b-col cols=auto class="left-float dot-wrap">
-                                        {{item.Site}}
-                                    </b-col>
-                                    <b-col cols=auto  class="left-float">
-                                        {{item.Awaiting_x0020_Action_x0020_By}}
-                                    </b-col>
-                                </b-row>
-                                <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title">
-                                    <p v-html="item.Body"></p>
-                                </b-modal>
-                            </b-card>
+                                    <b-row class="sub-title-box">
+                                        <b-col cols=auto class="left-float dot-wrap">
+                                            {{`Created: ${item.displayDate}`}}
+                                        </b-col>
+                                        <b-col cols=auto class="left-float dot-wrap">
+                                            {{item.Site}}
+                                        </b-col>
+                                        <b-col cols=auto  class="left-float">
+                                            {{item.Awaiting_x0020_Action_x0020_By}}
+                                        </b-col>
+                                    </b-row>
+                                    <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title" ok-only>
+                                        <p v-html="item.Body"></p>
+                                    </b-modal>
+                                </b-card>
+                            </RecycleScroller>
                         </b-col>
                     </b-row>
             </b-col>
@@ -125,34 +137,46 @@
                 </b-row>
                 <b-row class="list-pane">
                     <b-col cols="6">
-                        <b-card 
-                            class="device-card"
-                            v-bind:class="{ dissconnect: !device.connected}"
-                            v-for="device in deviceListA"
-                            :key="'card' + device.ip + device.hostName"
+                        <RecycleScroller
+                            class="scroller"
+                            :items="deviceListA"
+                            :item-size="115"
+                            key-field=ipHostName
+                            v-slot="{ item }"
                         >
-                            <b-row class="device-title dot-wrap">
-                                {{`${device.hostName} : ${device.ip}`}}
-                            </b-row>
-                            <b-row class="device-location  dot-wrap">
-                                {{`${device.locations[1]} ${device.locations[3]}`}}
-                            </b-row>
-                        </b-card>
+                            <b-card 
+                                class="device-card"
+                                v-bind:class="{ dissconnect: !item.connected}"
+                            >
+                                <b-row class="device-title dot-wrap">
+                                    {{`${item.hostName} : ${item.ip}`}}
+                                </b-row>
+                                <b-row class="device-location  dot-wrap">
+                                    {{`${item.locations[1]} ${item.locations[3]}`}}
+                                </b-row>
+                            </b-card>
+                        </RecycleScroller>
                     </b-col>
                     <b-col cols="6">
-                        <b-card 
-                            class="device-card"
-                            v-bind:class="{ dissconnect: !device.connected}"
-                            v-for="device in deviceListB"
-                            :key="'card' + device.ip + device.hostName"
+                        <RecycleScroller
+                            class="scroller"
+                            :items="deviceListB"
+                            :item-size="115"
+                            key-field=ipHostName
+                            v-slot="{ item }"
                         >
-                            <b-row class="device-title dot-wrap">
-                                {{`${device.hostName} : ${device.ip}`}}
-                            </b-row>
-                            <b-row class="device-location  dot-wrap">
-                                {{`${device.locations[1]} ${device.locations[3]}`}}
-                            </b-row>
-                        </b-card>
+                            <b-card 
+                                class="device-card"
+                                v-bind:class="{ dissconnect: !item.connected}"
+                            >
+                                <b-row class="device-title dot-wrap">
+                                    {{`${item.hostName} : ${item.ip}`}}
+                                </b-row>
+                                <b-row class="device-location  dot-wrap">
+                                    {{`${item.locations[1]} ${item.locations[3]}`}}
+                                </b-row>
+                            </b-card>
+                        </RecycleScroller>
                     </b-col>
                 </b-row>
             </b-col>
@@ -397,6 +421,7 @@ export default {
                 if (device.locations == null) {
                     device.locations = ['', 'location', '', 'unknown']
                 }
+                device['ipHostName'] = `${device.ip}${device.hostName}`
             }
             this.deviceList = devices
         },
@@ -502,10 +527,14 @@ body{
     padding: 0px 10px 0px 10px;
 }
 
+.scroller {
+  height: 100%;
+}
+
 .item-card {
     border: 2px solid  rgb(175, 175, 175) !important;
     border-radius: 20px;
-    margin: 3% 1% 3% 1%;
+    margin: 10px 5px 10px 5px;
     box-shadow: 3px 3px #888888d0;
     height: 160px;
 }
@@ -520,7 +549,7 @@ body{
 .device-card {
     border: 3px ridge rgb(53, 180, 3, 0.75) !important;
     border-radius: 20px;
-    margin: 3% 1% 3% 1%;
+    margin: 10px 5px 10px 5px;
     box-shadow: 3px 3px #888888d0;
     padding: 1% 3% 1% 3%;
     height: 95px;
@@ -573,6 +602,10 @@ body{
 
 .sub-title-box {
     height: 50px;
+}
+
+.close { /* Hides the X in the modal */
+    display: none;
 }
 
 </style>

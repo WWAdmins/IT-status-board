@@ -10,12 +10,17 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)
 
+// Toasts
 import VueToast from 'vue-toast-notification';
-// Import one of the available themes
-//import 'vue-toast-notification/dist/theme-default.css';
 import 'vue-toast-notification/dist/theme-sugar.css';
 
 Vue.use(VueToast);
+
+// Scroller (prevent overloading on item cards)
+import VueVirtualScroller from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+
+Vue.use(VueVirtualScroller)
 
 Vue.config.productionTip = false
 
