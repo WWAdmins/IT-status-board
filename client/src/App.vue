@@ -5,97 +5,57 @@
         <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''">Add a note</b-button>
         <b-row class="main-pane">
             <b-col cols=6>
-                    <p v-if="itRegError">{{itRegError}}</p>
+                <p v-if="itRegError">{{itRegError}}</p>
+                <RecycleScroller
+                    class="scroller"
+                    :items="itRegDoubles"
+                    :item-size="180"
+                    key-field=id
+                    v-slot="{ item }"
+                >
                     <b-row class="list-pane">
-                        <b-col cols="6">
-                            <RecycleScroller
-                                class="scroller"
-                                :items="itRegListA"
-                                :item-size="180"
-                                key-field=Id
-                                v-slot="{ item }"
+                        <b-col 
+                            cols="6"
+                            v-for="regItem of item.data"
+                            :key="regItem.Id"
+                        >
+                            <b-card 
+                                class="item-card"
+                                @click="showModal(regItem)"
                             >
-                                <b-card 
-                                    class="item-card"
-                                    @click="showModal(item)"
-                                >
-                                    <template #header class="card-header">
-                                        <b-row>
-                                            <b-col cols=8 class="text-start dot-wrap">
-                                                {{item.Status}}
-                                            </b-col>
-                                            <b-col cols=4 class="text-end">
-                                                {{item.Id}}
-                                            </b-col>
-                                        </b-row>
-                                    </template>
+                                <template #header class="card-header">
                                     <b-row>
-                                        <b-col class="item-title dot-wrap">
-                                            {{item.Title}}
+                                        <b-col cols=8 class="text-start dot-wrap">
+                                            {{regItem.Status}}
+                                        </b-col>
+                                        <b-col cols=4 class="text-end">
+                                            {{regItem.Id}}
                                         </b-col>
                                     </b-row>
-                                    <b-row class="sub-title-box">
-                                        <b-col cols=auto class="left-float dot-wrap">
-                                            {{`Created: ${item.displayDate}`}}
-                                        </b-col>
-                                        <b-col cols=auto class="left-float dot-wrap">
-                                            {{item.Site}}
-                                        </b-col>
-                                        <b-col cols=auto  class="left-float">
-                                            {{item.Awaiting_x0020_Action_x0020_By}}
-                                        </b-col>
-                                    </b-row>
-                                    <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title" ok-only>
-                                        <p v-html="item.Body"></p>
-                                    </b-modal>
-                                </b-card>
-                            </RecycleScroller>
-                        </b-col>
-                        <b-col cols="6">
-                            <RecycleScroller
-                                class="scroller"
-                                :items="itRegListB"
-                                :item-size="180"
-                                key-field=Id
-                                v-slot="{ item }"
-                            >
-                                <b-card 
-                                    class="item-card"
-                                    @click="showModal(item)"
-                                >
-                                    <template #header class="card-header">
-                                        <b-row>
-                                            <b-col cols=8 class="text-start dot-wrap">
-                                                {{item.Status}}
-                                            </b-col>
-                                            <b-col cols=4 class="text-end">
-                                                {{item.Id}}
-                                            </b-col>
-                                        </b-row>
-                                    </template>
-                                    <b-row>
-                                        <b-col class="item-title dot-wrap">
-                                            {{item.Title}}
-                                        </b-col>
-                                    </b-row>
-                                    <b-row class="sub-title-box">
-                                        <b-col cols=auto class="left-float dot-wrap">
-                                            {{`Created: ${item.displayDate}`}}
-                                        </b-col>
-                                        <b-col cols=auto class="left-float dot-wrap">
-                                            {{item.Site}}
-                                        </b-col>
-                                        <b-col cols=auto  class="left-float">
-                                            {{item.Awaiting_x0020_Action_x0020_By}}
-                                        </b-col>
-                                    </b-row>
-                                    <b-modal :id="'description' + item.Id+'modal'" size="lg" :title="item.Title" ok-only>
-                                        <p v-html="item.Body"></p>
-                                    </b-modal>
-                                </b-card>
-                            </RecycleScroller>
+                                </template>
+                                <b-row>
+                                    <b-col class="item-title dot-wrap">
+                                        {{regItem.Title}}
+                                    </b-col>
+                                </b-row>
+                                <b-row class="sub-title-box">
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{`Created: ${regItem.displayDate}`}}
+                                    </b-col>
+                                    <b-col cols=auto class="left-float dot-wrap">
+                                        {{regItem.Site}}
+                                    </b-col>
+                                    <b-col cols=auto  class="left-float">
+                                        {{regItem.Awaiting_x0020_Action_x0020_By}}
+                                    </b-col>
+                                </b-row>
+                                <b-modal :id="'description' + regItem.Id+'modal'" size="lg" :title="regItem.Title" ok-only>
+                                    <p v-html="regItem.Body"></p>
+                                </b-modal>
+                            </b-card>
                         </b-col>
                     </b-row>
+                </RecycleScroller>
             </b-col>
 
             <b-col cols="6">
@@ -135,50 +95,35 @@
                         </b-card>
                     </b-col>
                 </b-row>
-                <b-row class="list-pane">
-                    <b-col cols="6">
-                        <RecycleScroller
-                            class="scroller"
-                            :items="deviceListA"
-                            :item-size="115"
-                            key-field=ipHostName
-                            v-slot="{ item }"
+                
+                <RecycleScroller
+                    class="scroller"
+                    :items="deviceDoubles"
+                    :item-size="115"
+                    key-field=id
+                    v-slot="{ item }"
+                >
+                    <b-row class="list-pane">
+                        <b-col 
+                            cols="6"
+                            v-for="device of item.data"
+                            :key="device.ipHostname"
                         >
+                        
                             <b-card 
                                 class="device-card"
-                                v-bind:class="{ dissconnect: !item.connected}"
+                                v-bind:class="{ dissconnect: !device.connected}"
                             >
                                 <b-row class="device-title dot-wrap">
-                                    {{`${item.hostName} : ${item.ip}`}}
+                                    {{`${device.hostName} : ${device.ip}`}}
                                 </b-row>
                                 <b-row class="device-location  dot-wrap">
-                                    {{`${item.locations[1]} ${item.locations[3]}`}}
+                                    {{`${device.locations[1]} ${device.locations[3]}`}}
                                 </b-row>
                             </b-card>
-                        </RecycleScroller>
-                    </b-col>
-                    <b-col cols="6">
-                        <RecycleScroller
-                            class="scroller"
-                            :items="deviceListB"
-                            :item-size="115"
-                            key-field=ipHostName
-                            v-slot="{ item }"
-                        >
-                            <b-card 
-                                class="device-card"
-                                v-bind:class="{ dissconnect: !item.connected}"
-                            >
-                                <b-row class="device-title dot-wrap">
-                                    {{`${item.hostName} : ${item.ip}`}}
-                                </b-row>
-                                <b-row class="device-location  dot-wrap">
-                                    {{`${item.locations[1]} ${item.locations[3]}`}}
-                                </b-row>
-                            </b-card>
-                        </RecycleScroller>
-                    </b-col>
-                </b-row>
+                        </b-col>
+                    </b-row>
+                </RecycleScroller>
             </b-col>
         </b-row>
         <b-modal id="add-note-modal" size="lg" title="Add a note" @ok="addNote()">
@@ -208,17 +153,16 @@ export default {
     },
 
     computed: {
-        itRegListA: function() {
-            const splitList = this.itRegList.filter((item, index) => {
-                return index % 2 == 0
-            })
-            return splitList
-        },
-        itRegListB: function() {
-            const splitList = this.itRegList.filter((item, index) => {
-                return index % 2 == 1
-            })
-            return splitList
+        itRegDoubles: function() {
+            let regHold = []
+            for (let i = 0; i < this.itRegList.length; i+=2) {
+                if (i >= this.itRegList.length - 1) {
+                    regHold.push({ data: [this.itRegList[i]], id:i})
+                } else {
+                    regHold.push({ data: [this.itRegList[i], this.itRegList[i+1]], id:i})
+                }
+            }
+            return regHold
         },
         notesA: function() {
             const splitList = Object.entries(this.notes).filter((item, index) => {
@@ -232,17 +176,16 @@ export default {
             })
             return splitList
         },
-        deviceListA: function() {
-            const splitList = this.deviceList.filter((item, index) => {
-                return index % 2 == 0
-            })
-            return splitList
-        },
-        deviceListB: function() {
-            const splitList = this.deviceList.filter((item, index) => {
-                return index % 2 == 1
-            })
-            return splitList
+        deviceDoubles: function() {
+            let deviceHold = []
+            for (let i = 0; i < this.deviceList.length; i+=2) {
+                if (i >= this.deviceList.length - 1) {
+                    deviceHold.push({ data: [this.deviceList[i]], id:i})
+                } else {
+                    deviceHold.push({ data: [this.deviceList[i], this.deviceList[i+1]], id:i})
+                }
+            }
+            return deviceHold
         }
     },
 
@@ -411,7 +354,6 @@ export default {
             }).catch(error => {
                 this.errorHandle(error, "exCloud", 'get')
             });
-            console.log('fetched')
         },
 
         processExcloud(devices) {
