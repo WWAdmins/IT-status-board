@@ -17,7 +17,7 @@
                     <b-button @click="update()" variant="danger" class="nav-button">
                         <b-spinner v-if="loadingItReg || loadingNotes || loadingDevices" variant=light small></b-spinner> Update
                     </b-button>
-                    <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''" class="nav-button">Add a note</b-button>
+                    <b-button v-b-modal.add-note-modal variant="primary" @click="makeNote()" class="nav-button">Add a note</b-button>
                     <b-button @click="showHidden = !showHidden" class="nav-button">Show hidden</b-button>
                 </b-button-group>
             </b-col>
@@ -192,6 +192,7 @@
         </b-row>
         <b-modal id="add-note-modal" size="lg" title="Add a note" @ok="addNote()">
             <b-form-textarea
+                ref="note"
                 id="textarea"
                 v-model="newNote"
                 placeholder="Enter a new note..."
@@ -306,7 +307,6 @@ export default {
     },
 
     async mounted() {
-        console.log(this.window)
         this.update()
 
         this.timer = setInterval(() => {
@@ -413,6 +413,11 @@ export default {
             }
         },
 
+        makeNote() {
+            this.newNote = ''
+            setTimeout(()=>{ this.$refs.note.$el.focus() }, 50)
+        },
+
         async getNotes() {
             this.loadingNotes = true
 
@@ -491,7 +496,7 @@ export default {
             devices.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
             let toHide = []
             for (let device of devices) {
-                // console.log(device)
+                
                 if (device.locations == null) {
                     device.locations = ['', 'location', '', 'unknown']
                 }
@@ -620,7 +625,7 @@ body{
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: 60px;
+    margin-top: 6vh;
 }
 
 .nav {
@@ -681,7 +686,7 @@ body{
 }
 
 .scroller {
-  height: 860px;
+  height: 91vh;
 }
 
 .item-card {
