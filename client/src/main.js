@@ -22,6 +22,11 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 Vue.use(VueVirtualScroller)
 
+import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
+
+import VueSimpleContextMenu from 'vue-simple-context-menu'
+Vue.component('vue-simple-context-menu', VueSimpleContextMenu)
+
 Vue.config.productionTip = false
 
 new Vue({

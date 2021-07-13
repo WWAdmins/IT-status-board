@@ -1,11 +1,35 @@
 <template>
     <div id="app">
-        <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
-        <b-button @click="update()" variant="danger">Update</b-button>
-        <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''">Add a note</b-button>
+        <b-row class="nav">
+            <b-col cols=7>
+                <label class="page-title">WineWorks IT status board</label>
+            </b-col>
+            <b-col cols=2>
+                <label class="page-sub-title">{{`Last updated: ${lastUpdated}`}}</label>
+            </b-col>
+            <b-col cols=3>
+                <b-row align-v="end">
+                    <b-col>
+                        <b-button @click="update()" variant="danger">
+                            <b-spinner v-if="loadingItReg || loadingNotes || loadingDevices" variant=light small></b-spinner> Update
+                        </b-button>
+                    </b-col>
+                    <b-col>
+                        <b-button v-b-modal.add-note-modal variant="primary" @click="newNote=''">Add a note</b-button>
+                    </b-col>
+                    <b-col>
+                        <b-button @click="showHidden = !showHidden">Show hidden</b-button>
+                    </b-col>
+                </b-row>
+            </b-col>
+        </b-row>
+        
+        
+
         <b-row class="main-pane">
             <b-col cols=6>
                 <p v-if="itRegError">{{itRegError}}</p>
+                <b-spinner v-if="loadingItReg" variant=info></b-spinner>
                 <RecycleScroller
                     class="scroller"
                     :items="itRegDoubles"
@@ -23,7 +47,7 @@
                                 class="item-card"
                                 @click="showModal(regItem)"
                             >
-                                <template #header class="card-header">
+                                <template #header>
                                     <b-row>
                                         <b-col cols=8 class="text-start dot-wrap">
                                             {{regItem.Status}}
@@ -61,6 +85,7 @@
             <b-col cols="6">
                 <p v-if="noteError">{{noteError}}</p>
                 <p v-if="exCloudError">{{exCloudError}}</p>
+                <b-spinner v-if="loadingNotes" variant=info></b-spinner>
                 <b-row class="list-pane">
                     <b-col cols="6">
                         <b-card 
@@ -95,13 +120,14 @@
                         </b-card>
                     </b-col>
                 </b-row>
-                
+                <b-spinner v-if="loadingDevices" variant=info></b-spinner>
                 <RecycleScroller
                     class="scroller"
                     :items="deviceDoubles"
                     :item-size="115"
                     key-field=id
                     v-slot="{ item }"
+                    v-if="!showHidden"
                 >
                     <b-row class="list-pane">
                         <b-col 
@@ -113,6 +139,37 @@
                             <b-card 
                                 class="device-card"
                                 v-bind:class="{ dissconnect: !device.connected}"
+                                @contextmenu.prevent.stop="handleClick1($event, device)"
+                            >
+                                <b-row class="device-title dot-wrap">
+                                    {{`${device.hostName} : ${device.ip}`}}
+                                </b-row>
+                                <b-row class="device-location  dot-wrap">
+                                    {{`${device.locations[1]} ${device.locations[3]}`}}
+                                </b-row>
+                            </b-card>
+                        </b-col>
+                    </b-row>
+                </RecycleScroller>
+                <RecycleScroller
+                    class="scroller"
+                    :items="hiddenDeviceDoubles"
+                    :item-size="115"
+                    key-field=id
+                    v-slot="{ item }"
+                    v-else
+                >
+                    <b-row class="list-pane">
+                        <b-col 
+                            cols="6"
+                            v-for="device of item.data"
+                            :key="device.ipHostname"
+                        >
+                        
+                            <b-card 
+                                class="device-card"
+                                v-bind:class="{ dissconnect: !device.connected}"
+                                @contextmenu.prevent.stop="handleClick2($event, device)"
                             >
                                 <b-row class="device-title dot-wrap">
                                     {{`${device.hostName} : ${device.ip}`}}
@@ -135,6 +192,23 @@
                 max-rows="6"
             ></b-form-textarea>
         </b-modal>
+
+    <vue-simple-context-menu
+      :elementId="'hideMenu'"
+      :options="[{name: 'Hide', slug: 'Hide'}]"
+      :ref="'hideOption'"
+      @option-clicked="hideClicked"
+    >
+    </vue-simple-context-menu>
+
+    <vue-simple-context-menu
+      :elementId="'showMenu'"
+      :options="[{name: 'Show', slug: 'Show'}]"
+      :ref="'showOption'"
+      @option-clicked="showClicked"
+    >
+    </vue-simple-context-menu>
+    
     </div>
 </template>
 
@@ -186,29 +260,46 @@ export default {
                 }
             }
             return deviceHold
+        },
+        hiddenDeviceDoubles: function() {
+            let hideHold = []
+            for (let i = 0; i < this.hiddenDevices.length; i+=2) {
+                if (i >= this.hiddenDevices.length - 1) {
+                    hideHold.push({ data: [this.hiddenDevices[i]], id:i})
+                } else {
+                    hideHold.push({ data: [this.hiddenDevices[i], this.hiddenDevices[i+1]], id:i})
+                }
+            }
+            return hideHold
         }
     },
 
     data () {
         return {
             deviceList : [],
+            hiddenDevices : [],
             itRegList : [],
             notes: {},
             noteError: null,
             itRegError : null,
             exCloudError : null,
             newNote : null,
-            toastCount: 0
+
+            loadingDevices : false,
+            loadingItReg : false,
+            loadingNotes : false,
+            lastUpdated : null,
+            
+            showHidden : false
         }
     },
 
     async mounted() {
         this.update()
 
-        // this.timer = setInterval(() => {
-        //     console.log("updating")
-        //     this.update()
-        // }, CONSTANTS.refreshMinutes * 60000)
+        this.timer = setInterval(() => {
+            this.update()
+        }, CONSTANTS.refreshMinutes * 60000)
     },
 
     beforeDestroy() {
@@ -219,6 +310,27 @@ export default {
     },
 
     methods: {
+
+        handleClick1 (event, item) {
+            this.$refs.hideOption.showMenu(event, item)
+        },
+
+        handleClick2 (event, item) {
+            this.$refs.showOption.showMenu(event, item)
+        },
+
+        hideClicked (event) {
+            const index = this.deviceList.findIndex(x => x.ipHostName == event.item.ipHostName);
+            this.hiddenDevices.push(this.deviceList[index])
+            this.deviceList.splice(index, 1)
+        },
+
+        showClicked(event) {
+            const index = this.hiddenDevices.findIndex(x => x.ipHostName == event.item.ipHostName);
+            this.deviceList.push(this.hiddenDevices[index])
+            this.hiddenDevices.splice(index, 1)
+            this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
+        },
 
         showModal(item) {
             if (item.Body) {
@@ -241,7 +353,9 @@ export default {
         async update() {
             this.getNotes()
             this.getItRegList()
-            this.getExCloudDeviceList()
+            this.getExCloudDeviceList().then(
+                this.lastUpdated = DateTime.now().toLocaleString(DateTime.TIME_SIMPLE)
+            )
             
         },
 
@@ -287,6 +401,7 @@ export default {
         },
 
         async getNotes() {
+            this.loadingNotes = true
 
             let config = {
                 params: {
@@ -301,6 +416,7 @@ export default {
             }).catch(error => {
                 this.errorHandle(error, "notes", 'get')
             });
+            this.loadingNotes = false
         },
 
         async addNote(noteText) {
@@ -340,6 +456,7 @@ export default {
         },
 
         async getExCloudDeviceList() {
+            this.loadingDevices = true
 
             let config = {
                 params: {
@@ -354,21 +471,36 @@ export default {
             }).catch(error => {
                 this.errorHandle(error, "exCloud", 'get')
             });
+            this.loadingDevices = false
         },
 
         processExcloud(devices) {
             devices.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
+            let toHide = []
             for (let device of devices) {
                 // console.log(device)
                 if (device.locations == null) {
                     device.locations = ['', 'location', '', 'unknown']
                 }
                 device['ipHostName'] = `${device.ip}${device.hostName}`
+
+                if (this.hiddenDevices.findIndex(x => x.ipHostName == device.ipHostName) != -1) {
+                    toHide.push(device.ipHostName)
+                } 
             }
+            let hidden = []
+            for (let hideId of toHide) {
+                let target = devices.findIndex(x => x.ipHostName == hideId)
+                hidden.push(devices[target])
+                devices.splice(target, 1)
+            }
+
+            this.hiddenDevices = hidden
             this.deviceList = devices
         },
 
         async getItRegList() {
+            this.loadingItReg = true
 
             const configSp = CONSTANTS.sharePointAPI
 
@@ -395,7 +527,7 @@ export default {
             }
             
             await axios.get("http://localhost:8000/it_reg", config).then(response => {
-                this.itRegList = response.data.slice(0,5)
+                this.itRegList = response.data
                 for (let item in this.itRegList) {
                     this.itRegList[item].displayDate = this.getDisplayDate(this.itRegList[item].Created)
                     if (this.itRegList[item].Awaiting_x0020_Action_x0020_By == null) {
@@ -403,14 +535,18 @@ export default {
                     }
                 }
                 this.itRegError = null
+                console.log(this.itRegList)
             }).catch(error => {
                 this.errorHandle(error, "itReg", 'get')
             });
+
+            this.loadingItReg = false
         },
 
         getDisplayDate(dateTimeStamp) {
             const dateStamp = new DateTime.fromISO(dateTimeStamp)
             const now = new DateTime.now()
+
             let displayDate;
 
             if (dateStamp.hasSame(now, 'day')) {
@@ -457,6 +593,30 @@ body{
     margin-top: 60px;
 }
 
+.nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 101vw;
+    z-index: 20;
+    background-color: #003865;
+    margin-top: -60px !important;
+    padding-top: 10px;
+}
+
+.page-title {
+    color: white;
+    font-size: 130%;
+    font-weight: 700;
+    float: left;
+    margin: 10px;
+}
+
+.page-sub-title {
+    color: white;
+    margin: 10px;
+}
+
 .dotted {
     border-style: dotted;
 }
@@ -470,7 +630,7 @@ body{
 }
 
 .scroller {
-  height: 800px;
+  height: 860px;
 }
 
 .item-card {
@@ -510,6 +670,21 @@ body{
     background-color: rgb(119, 119, 119) !important;
     color: white;
     font-size: 120%;
+}
+
+.high-pri {
+    background-color: red !important;
+    color: white !important;
+}
+
+.normal-pri {
+    background-color: yellow !important;
+    color: darkgray !important;
+}
+
+.low-pri {
+    background-color: green !important;
+    color: darkgray !important;
 }
 
 .text-start {

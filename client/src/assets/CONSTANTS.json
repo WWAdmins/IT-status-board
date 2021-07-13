@@ -1,6 +1,5 @@
 {
     "exCloudAPI" : {
-        "allDecives" : "https://cloud-ie.aerohive.com/xapi/v1/monitor/devices/",
         "errorMsgPrefix" : "ExtremeCloud querry failed. "
     },
     "sharePointAPI" : {
