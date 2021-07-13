@@ -528,7 +528,7 @@ body{
 }
 
 .scroller {
-  height: 100%;
+  height: 800px;
 }
 
 .item-card {
@@ -606,6 +606,11 @@ body{
 
 .close { /* Hides the X in the modal */
     display: none;
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
 }
 
 </style>
