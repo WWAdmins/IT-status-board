@@ -51,8 +51,13 @@ async function getitReg(params) {
         .get()
     .catch(error => {
         isError = true
-        result = error
+        result = error.response
+        return [isError, result]
     })
+    
+    if (isError) {
+        result = result[1]
+    }
 
     console.log("Returning IT register")
     return [isError, result]
@@ -77,7 +82,6 @@ async function getExCloudDeviceList(params) {
     }
 
     let result;
-    let errorHold;
     let isError = false;
 
     await axios.get("https://cloud-ie.aerohive.com/xapi/v1/monitor/devices/", config).then(response => {
@@ -239,7 +243,7 @@ app.get("/it_reg", async function(req, res) {
     if (!isError) {
         res.status(200).send(result);
     } else {
-        res.status(result.response.status).send(result.response.statusText);
+        res.status(result.status).send(result.statusText);
     }
 });
 

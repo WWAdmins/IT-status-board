@@ -27,7 +27,7 @@
 
         <b-row class="main-pane">
             <b-col cols=6>
-                <p v-if="itRegError">{{itRegError}}</p>
+                <label v-if="itRegError" class="error-label">{{itRegError}}</label>
                 <b-spinner v-if="loadingItReg" variant=info></b-spinner>
                 <RecycleScroller
                     class="scroller"
@@ -90,8 +90,8 @@
             </b-col>
 
             <b-col cols="6">
-                <p v-if="noteError">{{noteError}}</p>
-                <p v-if="exCloudError">{{exCloudError}}</p>
+                <label v-if="noteError" class="error-label">{{noteError}}</label>
+                <label v-if="exCloudError" class="error-label">{{exCloudError}}</label>
                 <b-spinner v-if="loadingNotes" variant=info></b-spinner>
                 <b-row class="list-pane">
                     <b-col cols="6">
@@ -363,6 +363,9 @@ export default {
         },
 
         async update() {
+            this.exCloudError = null;
+            this.itRegError = null;
+            this.noteError = null;
             this.getNotes()
             this.getItRegList()
             this.getExCloudDeviceList().then(
@@ -376,14 +379,13 @@ export default {
             let errPrefix;
             if (service == 'exCloud') {
                 errPrefix = CONSTANTS.exCloudAPI.errorMsgPrefix;
-            } else if (type == 'itReg') {
+            } else if (service == 'itReg') {
                 errPrefix = CONSTANTS.sharePointAPI.errorMsgPrefix;
-            } else if (type == 'notes') {
+            } else if (service == 'notes') {
                 errPrefix = CONSTANTS.notes.errorMsgPrefix[type];
             }
             const errMsgs = CONSTANTS.errorMsgs;
             let errMsg;
-            console.log(error)
             switch(error.response.status) {
                 case 400:
                     errMsg = errPrefix + errMsgs[400];
@@ -406,9 +408,9 @@ export default {
 
             if (service == 'exCloud') {
                 this.exCloudError = errMsg;
-            } else if (type == 'itReg') {
+            } else if (service == 'itReg') {
                 this.itRegError = errMsg;
-            } else if (type == 'ntoes') {
+            } else if (service == 'ntoes') {
                 this.noteError = errMsg;
             }
         },
@@ -430,9 +432,9 @@ export default {
 
             await axios.get("http://localhost:8000/notes", config).then(response => {
                 this.notes = response.data
-                this.noteError = null
             }).catch(error => {
                 this.errorHandle(error, "notes", 'get')
+                this.notes = []
             });
             this.loadingNotes = false
         },
@@ -485,9 +487,9 @@ export default {
 
             await axios.get("http://localhost:8000/ex_cloud", config).then(response => {
                 this.processExcloud(response.data.data)
-                this.exCloudError = null
             }).catch(error => {
                 this.errorHandle(error, "exCloud", 'get')
+                this.deviceList = []
             });
             this.loadingDevices = false
         },
@@ -546,9 +548,9 @@ export default {
             
             await axios.get("http://localhost:8000/it_reg", config).then(response => {
                 this.itRegList = this.processItReg(response.data)
-                this.itRegError = null
             }).catch(error => {
                 this.errorHandle(error, "itReg", 'get')
+                this.itRegList = []
             });
 
             this.loadingItReg = false
@@ -614,7 +616,6 @@ body{
     background-image: url('./assets/circle graphic.jpg');
     background-repeat: no-repeat;
     background-attachment: fixed;
-    /* background-size: cover; */
     background-position: center;
     min-width: 1300px;
 }
@@ -687,6 +688,14 @@ body{
 
 .scroller {
   height: 91vh;
+}
+
+.error-label {
+    background-color: red;
+    color: white;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 15px;
 }
 
 .item-card {
