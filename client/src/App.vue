@@ -699,7 +699,7 @@ body{
 }
 
 .item-card {
-    border-radius: 20px;
+    border-radius: 5px;
     margin: 10px 5px 10px 5px;
     box-shadow: 3px 3px #888888d0;
     height: 160px;
@@ -707,14 +707,14 @@ body{
 
 .note-card {
     border: 2px solid  rgb(175, 175, 175) !important;
-    border-radius: 20px;
+    border-radius: 5px;
     margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
 }
 
 .device-card {
     border: 3px ridge rgb(53, 180, 3, 0.75) !important;
-    border-radius: 20px;
+    border-radius: 5px;
     margin: 10px 5px 10px 5px;
     box-shadow: 3px 3px #888888d0;
     padding: 1% 3% 1% 3%;
