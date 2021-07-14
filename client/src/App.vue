@@ -883,18 +883,17 @@ body{
     display: none;
 }
 
-::-webkit-scrollbar {
+::-webkit-scrollbar { /* Hide all scroll bars. It just looks cleaner */
     width: 0px;
     height: 0px;
 }
 
-
 .pulse {
-  animation: pulse 3s ease-out infinite;
+  animation: inverse-pulse 3s ease-out infinite;
 }
 
 .pulse:hover {
-  animation: none;
+  animation: pulse 3s ease-out infinite;
 }
 
 @keyframes pulse {
@@ -907,6 +906,21 @@ body{
       box-shadow: 0 0 0 10px rgba(235, 72, 8, 0);
   }
   100% {
+      -moz-box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
+      box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
+  }
+}
+
+@keyframes inverse-pulse {
+  100% {
+    -moz-box-shadow: 0 0 0 0 rgba(235, 72, 8, 0.8);
+    box-shadow: 0 0 0 0 rgba(235, 72, 8, 0.6);
+  }
+  30% {
+      -moz-box-shadow: 0 0 0 10px rgba(235, 72, 8, 0);
+      box-shadow: 0 0 0 10px rgba(235, 72, 8, 0);
+  }
+  0% {
       -moz-box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
       box-shadow: 0 0 0 0 rgba(235, 72, 8, 0);
   }
