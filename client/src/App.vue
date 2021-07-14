@@ -99,10 +99,17 @@
                             v-for="[noteKey, note] of this.notesA"
                             :key="'note' + noteKey"
                             class="note-card"
+                            v-bind:class="{ 
+                                pulse : note.priority == 1,
+                                highNote : note.priority == 1,
+                                normalNote : note.priority == 2,
+                                lowNote : note.priority == 3
+                                }"
+                            @contextmenu.prevent.stop="handleClick3($event, noteKey)"
                         >
                             <b-row class="device-title">
                                 <b-col cols=10>
-                                    {{note}}
+                                    {{note.message}}
                                 </b-col>
                                 <b-col cols=2>
                                     <b-button @click="deleteNote(noteKey)" variant="danger">X</b-button>
@@ -115,10 +122,17 @@
                             v-for="[noteKey, note] of this.notesB"
                             :key="'note' + noteKey"
                             class="note-card"
+                            v-bind:class="{ 
+                                pulse : note.priority == 1,
+                                highNote : note.priority == 1,
+                                normalNote : note.priority == 2,
+                                lowNote : note.priority == 3
+                                }"
+                            @contextmenu.prevent.stop="handleClick3($event, noteKey)"
                         >
                             <b-row class="device-title">
                                 <b-col cols=10>
-                                    {{note}}
+                                    {{note.message}}
                                 </b-col>
                                 <b-col cols=2>
                                     <b-button @click="deleteNote(noteKey)" variant="danger">X</b-button>
@@ -199,6 +213,7 @@
                 rows="3"
                 max-rows="6"
             ></b-form-textarea>
+            <b-form-select v-model="notePriority" :options="notePriorities"></b-form-select>
         </b-modal>
 
     <vue-simple-context-menu
@@ -214,6 +229,14 @@
       :options="[{name: 'Show', slug: 'Show'}]"
       :ref="'showOption'"
       @option-clicked="showClicked"
+    >
+    </vue-simple-context-menu>
+
+    <vue-simple-context-menu
+      :elementId="'priorityMenu'"
+      :options="notePrioritiesMenu"
+      :ref="'priorityOptions'"
+      @option-clicked="priorityChange"
     >
     </vue-simple-context-menu>
     
@@ -302,11 +325,17 @@ export default {
             showHidden : false,
 
             oldestTcketId : null,
-            ticketPriorities : { 1 : 0, 2 : 0, 3 : 0 }
+            ticketPriorities : { 1 : 0, 2 : 0, 3 : 0 },
+
+            notePriorities : null,
+            notePriority : null,
+            notePrioritiesMenu : []
         }
     },
 
     async mounted() {
+        this.notePriorities = CONSTANTS.priorities.selectList
+        this.notePrioritiesMenu = CONSTANTS.priorities.menuList
         this.update()
 
         this.timer = setInterval(() => {
@@ -331,6 +360,10 @@ export default {
             this.$refs.showOption.showMenu(event, item)
         },
 
+        handleClick3 (event, item) {
+            this.$refs.priorityOptions.showMenu(event, item)
+        },
+
         hideClicked (event) {
             const index = this.deviceList.findIndex(x => x.ipHostName == event.item.ipHostName);
             this.hiddenDevices.push(this.deviceList[index])
@@ -342,6 +375,14 @@ export default {
             this.deviceList.push(this.hiddenDevices[index])
             this.hiddenDevices.splice(index, 1)
             this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
+        },
+
+        priorityChange(event) {
+            const noteId = event.item
+            const newPriority = event.option.slug
+            if (this.notes[noteId].priority != newPriority) {
+                this.patchPriority(noteId, newPriority)
+            }
         },
 
         showModal(item) {
@@ -439,15 +480,27 @@ export default {
             this.loadingNotes = false
         },
 
-        async addNote(noteText) {
+        async addNote(noteText, priority) {
 
             if (noteText == null) {
                 noteText = this.newNote
                 this.newNote = null
             }
 
+            if (priority == null) {
+                if (this.notePriority == null) {
+                    priority = 2
+                } else {
+                    priority = this.notePriority
+                    this.notePriority = null
+                }
+            }
+
             let body = {
-                note: noteText
+                "note" : { 
+                    "message" : noteText,
+                    "priority" : priority
+                } 
             }
 
             await axios.post("http://localhost:8000/notes", body).then(response => {
@@ -470,6 +523,21 @@ export default {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
                 this.errorHandle(error, "notes", 'delete')
+            });
+
+            await this.getNotes()
+        },
+
+        async patchPriority(id, priority) {
+            let body = {
+                "id" : id,
+                "priority" : priority
+            }
+
+            await axios.patch("http://localhost:8000/notes", body).then(response => {
+                this.makeToast(response.data, 'success')
+            }).catch(error => {
+                this.errorHandle(error, "notes", 'post')
             });
 
             await this.getNotes()
@@ -706,10 +774,21 @@ body{
 }
 
 .note-card {
-    border: 2px solid  rgb(175, 175, 175) !important;
     border-radius: 5px;
     margin: 3% 1% 3% 1%;
     box-shadow: 3px 3px #888888d0;
+}
+
+.lowNote {
+    border: 1px solid  rgb(52, 147, 255) !important;
+}
+
+.normalNote {
+    border: 2px solid  rgb(175, 175, 175) !important;
+}
+
+.highNote {
+    border: 2px solid  red !important;
 }
 
 .device-card {

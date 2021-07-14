@@ -29,5 +29,18 @@
         "500" : "Something went wrong on their end",
         "misc" : "Something went wrong"
     },
-    "refreshMinutes" : 15
+    "refreshMinutes" : 15,
+    "priorities" : {
+        "selectList" : [
+            { "value" : null, "text" : "Select a priority..."},
+            { "value" : 1, "text" : "High priority"},
+            { "value" : 2, "text" : "Normal priority"},
+            { "value" : 3, "text" : "Low priority"}
+        ],
+        "menuList" : [
+            {"name" : "High priority", "slug": "1"},
+            {"name" : "Normal priority", "slug": "2"},
+            {"name" : "Low priority", "slug": "3"}
+        ]
+    }
 }

@@ -1,6 +1,6 @@
 // index.js
 
-
+const VALID_PRIORITIES_INT = [1,2,3]
 
 /**
  * Required External Modules
@@ -126,7 +126,22 @@ async function addNote(req) {
     console.log('Adding note')
 
     let isError = false;
-    let result = "sucess"
+    let result = "sucess";
+
+    const newNote = req.body.note;
+    if (newNote.message == '' || newNote.message == null) {
+        result = [400, 'No message found in request'];
+        isError = true;
+        console.log('No message found in request')
+        return [isError, result]
+    }
+    console.log(newNote.priority)
+    if (!VALID_PRIORITIES_INT.includes(newNote.priority)) {
+        result = [400, 'No priority found in request'];
+        isError = true;
+        console.log('No priority found in request')
+        return [isError, result]
+    }
 
     if(!fs.existsSync("notes.json")) {
         try {
@@ -138,15 +153,6 @@ async function addNote(req) {
             return [isError, result]
         }
     }
-
-    const newNote = req.body.note
-    if (newNote == null) {
-        result = [400, 'No note found in request'];
-        isError = true;
-        console.log('No note found in request')
-        return [isError, result]
-    }
-
     
     let noteJson;
     let maxKey;
@@ -180,6 +186,76 @@ async function addNote(req) {
     }
 
     console.log('Returning notes')
+    return [isError, result]
+}
+
+async function updatePriority(req) {
+    console.log('Updating note')
+
+    let isError = false;
+    let result = "sucess"
+
+    const id = req.body.id
+    if (id == null) {
+        result = [400, 'No id found in request'];
+        isError = true;
+        console.log('No id found in request')
+        return [isError, result]
+    }
+    const priority = parseInt(req.body.priority)
+    if (!VALID_PRIORITIES_INT.includes(priority)) {
+        result = [400, 'Invalid priority found in request'];
+        isError = true;
+        console.log('Invalid priority found in request')
+        return [isError, result]
+    }
+
+    if(!fs.existsSync("notes.json")) {
+        try {
+            fs.writeFileSync('notes.json', JSON.stringify({}, null, 4), 'utf8')
+        } catch (err) {
+            result = err;
+            isError = true;
+            console.log('Failed to generate new notes file')
+            return [isError, result]
+        }
+    }
+    
+    let noteJson;
+
+    try {
+        const jsonString = fs.readFileSync("./notes.json");
+        noteJson = JSON.parse(jsonString);
+    } catch (err) {
+        result = err;
+        isError = true;
+        console.log('Failed to read notes file')
+        return [isError, result]
+    }
+
+    if (noteJson[id] == null) {
+        result = [400, `No note with id: ${id} found`];
+        isError = true;
+        console.log(`No note with id: ${id} found`)
+        return [isError, result]
+    }
+
+
+
+    noteJson[id]["priority"] = priority
+
+    try {
+        fs.writeFileSync('notes.json', JSON.stringify(noteJson, null, 4), 'utf8')
+        result = "Sucessfully updated note"
+    } catch (err) {
+        result = err;
+        isError = true;
+        
+        console.log('Failed to write notes file')
+        return [isError, result]
+    }
+
+    console.log('Finished updating notes')
     return [isError, result]
 }
 
@@ -268,7 +344,7 @@ app.get("/notes", async function(req, res) {
 app.post("/notes", async function(req, res) {
     const [isError, result] = await addNote(req)
     if (!isError) {
-        res.status(200).send(result);
+        res.status(201).send(result);
     } else {
         if (result[0] == 400) {
             res.status(result[0]).send(result[1]);
@@ -288,6 +364,15 @@ app.delete("/notes", async function(req, res) {
         } else {
             res.status(500).send(result);
         }
+    }
+});
+
+app.patch("/notes", async function(req, res) {
+    const [isError, result] = await updatePriority(req)
+    if (!isError) {
+        res.status(200).send(result);
+    } else {
+        res.status(500).send(result);
     }
 });
 
