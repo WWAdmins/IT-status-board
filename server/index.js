@@ -35,13 +35,23 @@ sp.setup({
 async function getitReg(params) {
     console.log('Fetching IT register')
 
+    let result = {};
+    let isError = false;
+
+    if (params == null || params.orderOn == null || params.filter == null || params.select == null) {
+        result['status'] = 400
+        result['statusText'] = "Bad request, missing querry fields"
+        isError = true
+        return [isError, result]
+    }
+
+    let orderBy = false
+    if (params.orderBy != null) {
+        orderBy = params.orderBy != 'desc';
+    }
+
     // make a request to get the web's details
     const w = await sp.web();
-    // console.log(JSON.stringify(w, null, 2));
-
-    let result;
-    let isError = false;
-    const orderBy = params.orderBy != 'desc';
 
     result = await sp.web.lists
         .getByTitle(params.title).items
@@ -372,7 +382,11 @@ app.patch("/notes", async function(req, res) {
     if (!isError) {
         res.status(200).send(result);
     } else {
-        res.status(500).send(result);
+        if (result.length > 1) {
+            res.status(result[0]).send(result[1]);
+        } else {
+            res.status(500).send(result);
+        }
     }
 });
 

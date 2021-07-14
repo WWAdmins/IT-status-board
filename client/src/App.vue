@@ -506,7 +506,7 @@ export default {
             await axios.post("http://localhost:8000/notes", body).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
-                this.errorHandle(error, "notes", 'post')
+                this.makeToast(error.response.data, 'error')
             });
 
             await this.getNotes()
@@ -522,7 +522,7 @@ export default {
             await axios.delete("http://localhost:8000/notes", {data : body}).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
-                this.errorHandle(error, "notes", 'delete')
+                this.makeToast(error.response.data, 'error')
             });
 
             await this.getNotes()
@@ -537,7 +537,8 @@ export default {
             await axios.patch("http://localhost:8000/notes", body).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
-                this.errorHandle(error, "notes", 'post')
+                console.log(error.response)
+                this.makeToast(error.response.data, 'error')
             });
 
             await this.getNotes()
