@@ -18,7 +18,7 @@
                         <b-spinner v-if="loadingItReg || loadingNotes || loadingDevices" variant=light small></b-spinner> Update
                     </b-button>
                     <b-button v-b-modal.add-note-modal variant="primary" @click="makeNote()" class="nav-button">Add a note</b-button>
-                    <b-button @click="showHidden = !showHidden" class="nav-button">Show hidden</b-button>
+                    <b-button @click="showHidden = !showHidden" class="nav-button" v-bind:class="{ hiddenButton : showHidden }">Show hidden</b-button>
                 </b-button-group>
             </b-col>
         </b-row>
@@ -735,6 +735,11 @@ body{
 .nav-button {
     margin-left: 5px !important;
     border-radius: 3px !important;
+}
+
+.hiddenButton {
+    border: 2px inset  rgb(82, 82, 82) !important;
+    border-radius: 5px !important;
 }
 
 .right-push {
