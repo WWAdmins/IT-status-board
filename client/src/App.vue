@@ -825,7 +825,7 @@ body{
     background-color: red !important; 
     margin: -9px -17px -9px -17px;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 5px 5px 0px 0px;
     color: white;
 }
 
@@ -833,7 +833,7 @@ body{
     background-color: #ffdb00 !important;
     margin: -9px -17px -9px -17px;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 5px 5px 0px 0px;
     color: black;
 }
 
@@ -841,7 +841,7 @@ body{
     background-color: #00a500 !important;
     margin: -9px -17px -9px -17px;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 5px 5px 0px 0px;
     color: white;
 }
 
