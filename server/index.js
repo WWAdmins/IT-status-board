@@ -1,6 +1,5 @@
 // index.js
 
-const VALID_PRIORITIES_INT = [1,2,3]
 
 /**
  * Required External Modules
@@ -23,6 +22,7 @@ const port = process.env.PORT || "8000";
 app.use(cors());
 app.use(express.json())
 
+const VALID_PRIORITIES_INT = [1,2,3]
 
 sp.setup({
     sp: {
