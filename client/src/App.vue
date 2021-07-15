@@ -466,14 +466,8 @@ export default {
         async getNotes() {
             this.loadingNotes = true
 
-            let config = {
-                params: {
-                    page : 0,
-                    pageSize : 200
-                }
-            }
-
-            await axios.get("http://localhost:8000/notes", config).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/notes`
+            await axios.get(url).then(response => {
                 this.notes = response.data
             }).catch(error => {
                 this.errorHandle(error, "notes", 'get')
@@ -505,7 +499,8 @@ export default {
                 } 
             }
 
-            await axios.post("http://localhost:8000/notes", body).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/notes`
+            await axios.post(url, body).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
                 this.makeToast(error.response.data, 'error')
@@ -520,8 +515,8 @@ export default {
             let body = {
                 key: noteKey
             }
-
-            await axios.delete("http://localhost:8000/notes", {data : body}).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/notes`
+            await axios.delete(url, {data : body}).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
                 this.makeToast(error.response.data, 'error')
@@ -536,10 +531,10 @@ export default {
                 "priority" : priority
             }
 
-            await axios.patch("http://localhost:8000/notes", body).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/notes`
+            await axios.patch(url, body).then(response => {
                 this.makeToast(response.data, 'success')
             }).catch(error => {
-                console.log(error.response)
                 this.makeToast(error.response.data, 'error')
             });
 
@@ -556,7 +551,8 @@ export default {
                 }
             }
 
-            await axios.get("http://localhost:8000/ex_cloud", config).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/ex_cloud`
+            await axios.get(url, config).then(response => {
                 this.processExcloud(response.data.data)
             }).catch(error => {
                 this.errorHandle(error, "exCloud", 'get')
@@ -617,7 +613,8 @@ export default {
                 }
             }
             
-            await axios.get("http://localhost:8000/it_reg", config).then(response => {
+            const url = `${CONSTANTS.serverAddress.base}:${CONSTANTS.serverAddress.port}/it_reg`
+            await axios.get(url, config).then(response => {
                 this.itRegList = this.processItReg(response.data)
             }).catch(error => {
                 this.errorHandle(error, "itReg", 'get')

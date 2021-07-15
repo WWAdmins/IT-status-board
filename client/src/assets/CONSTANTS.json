@@ -42,5 +42,9 @@
             {"name" : "Normal priority", "slug": "2"},
             {"name" : "Low priority", "slug": "3"}
         ]
+    },
+    "serverAddress" : {
+        "base" : "http://localhost",
+        "port" : "8000"
     }
 }
