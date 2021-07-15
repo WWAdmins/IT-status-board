@@ -204,6 +204,7 @@
                 </RecycleScroller>
             </b-col>
         </b-row>
+        <b-form-select v-model="notePriority" :options="notePriorities"></b-form-select>
         <b-modal id="add-note-modal" size="lg" title="Add a note" @ok="addNote()">
             <b-form-textarea
                 ref="note"
@@ -213,7 +214,8 @@
                 rows="3"
                 max-rows="6"
             ></b-form-textarea>
-            <b-form-select v-model="notePriority" :options="notePriorities"></b-form-select>
+            <br>
+            <b-form-select class="mb-2 mr-sm-2 mb-sm-0" v-model="notePriority" :options="notePriorities"></b-form-select>
         </b-modal>
 
     <vue-simple-context-menu
@@ -626,7 +628,7 @@ export default {
         },
 
         processItReg(itRegPreList) {
-            this.ticketPriorities = { 1 : 0, 2 : 0, 3 : 0 }
+            this.ticketPriorities = { 1 : 0, 2 : 0, 3 : 0 } // Reset current ticket counters
             for (let item of itRegPreList) {
                 item.displayDate = this.getDisplayDate(item.Created)
                 if (item.Awaiting_x0020_Action_x0020_By == null) {
