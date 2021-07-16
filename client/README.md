@@ -22,3 +22,7 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+
+### Config
+The refresh time defaults to updatng every 15 minutes, this can be configured in the CONSTANTS.json file
