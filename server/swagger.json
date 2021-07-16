@@ -1,0 +1,473 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "The WineWorks status API is a pourpose built internal API for serving the IT status board web app. The API has endpoints for fetching active IT tickets, fetching current network access points and managing a note system.\n\n Due to the purpose built nature of this API and its intention of internal use, the API may not be imediately suited for use outside of the existing web app",
+    "version": "1.0.0",
+    "title": "WineWorks IT status API",
+    "contact": {
+      "email": "Taran.Jennison@wineworks.co.nz"
+    }
+  },
+  "host": "tbc",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "IT register",
+      "description": "The active tickets for WineWorks IT department"
+    },
+    {
+      "name": "Extreme cloud",
+      "description": "All currently registered access points"
+    },
+    {
+      "name": "Notes",
+      "description": "Operations related to notes"
+    }
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/it_reg": {
+      "get": {
+        "tags": [
+          "IT register"
+        ],
+        "summary": "Fetch the current active IT tickets",
+        "description": "Using the provided querry paramaters, the WineWorks sharepoint is searched for the corrosponding list and filtered based on the parameters. The parameters of this endpoint are direcctly used in querrying the SharePoint list and use OData querry syntax. For more information check out: https://docs.microsoft.com/en-us/azure/search/query-odata-filter-orderby-syntax",
+        "operationId": "getItReg",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "select",
+            "in": "query",
+            "description": "The list of columns to be selected",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "orderOn",
+            "in": "query",
+            "description": "Column included in select that any sortng will be done on",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "A flag indicating the direction of sorting",
+            "required": false,
+            "type": "string",
+            "default": "desc",
+            "enum": [
+              "desc",
+              "asc"
+            ]
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "A string indicating the method of fioltering to use on the querry results",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "description": "The title of the SharePoint list to be queried",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/it_reg"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid querry parameters"
+          },
+          "500": {
+            "description": "This endpoint relies on the existing Microsoft SharePoint API endpoint and returns may come directly from this"
+          }
+        }
+      }
+    },
+    "/ex_cloud": {
+      "get": {
+        "tags": [
+          "Extreme cloud"
+        ],
+        "summary": "Fetch the list of currently registered access points",
+        "description": "Calls the Extreme Cloud API endpoint for returning the list of currently registered access points. The return will contain information about their current status as well as their id and ip",
+        "operationId": "getExCloud",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for returning paginated results",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of entries per page when returning paginated results",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ex_cloud"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "500": {
+            "description": "This endpoint directly calls the Extreme Cloud API endpoint /xapi/v1/monitor/devices/ any returns of this endpoint are subject to the returns of the Extreme Cloud endpoint. Read more here: https://developer.aerohive.com/docs/api-documentation#!/monitoring-devices/getDeviceListUsingGET (a free devoloper account is needed to access the API docs)"
+          }
+        }
+      }
+    },
+    "/notes": {
+      "get": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Get the current notes",
+        "description": "Returns a JSON object containing the current notes for the IT status board",
+        "operationId": "getNotes",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "enum": [
+                        1,
+                        2,
+                        3
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Issues occured in reading the expected notes.json on the server side"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Submit a new note",
+        "description": "Sends a new note to the server. The server will give it an ID but will *NOT* return the new list of notes. It is recomended to follow this POST request with a get request. This will ensure you have an updated list and prevent any client side desync in the event of rejected notes",
+        "operationId": "postNotes",
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "new note being added",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "enum": [
+                        1,
+                        2,
+                        3
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sucessfully added new note"
+          },
+          "400": {
+            "description": "Invalid request. Will include statusText describing the issue"
+          },
+          "500": {
+            "description": "Will be returned if an error occured while registering the new note"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Deletes a note",
+        "description": "Deletes the specified note from the current set of notes but wil *NOT* return the new list of notes. It is recomended to follow this DELETE request with a GET request. This will ensure you have an updated list and prevent any client side desync in the event of rejected notes",
+        "operationId": "deleteNote",
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "new note being added",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "integer",
+                  "format": "number",
+                  "description": "Id of the note to be deleted"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note secussfully deleted"
+          },
+          "404": {
+            "description": "Note not found"
+          },
+          "500": {
+            "description": "An error occured while attempting to delete the note"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Update a note's priority",
+        "description": "Updates the specified note's priority but wil *NOT* return the new list of notes. It is recomended to follow this PATCH request with a GET request. This will ensure you have an updated list and prevent any client side desync in the event of rejected notes",
+        "operationId": "patchNote",
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "new note being added",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "number",
+                  "description": "Id of the note to be deleted"
+                },
+                "priority": {
+                  "type": "integer",
+                  "format": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "description": "Id of the note to updated"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note secussfully updated"
+          },
+          "400": {
+            "description": "Bad request. Missing fields, statusText should contain relevant details"
+          },
+          "404": {
+            "description": "Note not found"
+          },
+          "500": {
+            "description": "An error occured while attempting to update the note"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "it_reg": {
+      "type": "object",
+      "properties": {
+        "Awaiting_x0020_Action_x0020_By": {
+          "type": "string",
+          "description": "name of person actioning ticket"
+        },
+        "Body": {
+          "type": "string",
+          "format": "html"
+        },
+        "Created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ID": {
+          "type": "integer",
+          "format": "number"
+        },
+        "Id": {
+          "type": "integer",
+          "format": "number"
+        },
+        "Site": {
+          "type": "string",
+          "description": "site related to the ticket",
+          "enum": [
+            "Auckland",
+            "Marlborough",
+            "Hawke's Bay"
+          ]
+        },
+        "Priority": {
+          "type": "string",
+          "description": "ticket priority",
+          "enum": [
+            "(1) High",
+            "(2) Normal",
+            "(3) Low"
+          ]
+        },
+        "Title": {
+          "type": "string",
+          "description": "ticket title"
+        }
+      }
+    },
+    "ex_cloud": {
+      "type": "object",
+      "properties": {
+        "activeClients": {
+          "type": "integer"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "connectedClients": {
+          "type": "integer",
+          "format": "number"
+        },
+        "defaultGateway": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "integer"
+        },
+        "dns": {
+          "type": "string"
+        },
+        "hostName": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string",
+          "format": "ip address"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "format": "string"
+          }
+        },
+        "macAddress": {
+          "type": "string"
+        },
+        "mgmtStatus": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "osVersion": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "integer"
+        },
+        "presenceOn": {
+          "type": "boolean"
+        },
+        "serialId": {
+          "type": "string"
+        },
+        "simType": {
+          "type": "string"
+        },
+        "subnetMask": {
+          "type": "string"
+        },
+        "systemUpTime": {
+          "type": "integer"
+        },
+        "unAssociatedClientsCount": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

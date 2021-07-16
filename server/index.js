@@ -244,7 +244,7 @@ async function updatePriority(req) {
     }
 
     if (noteJson[id] == null) {
-        result = [400, `No note with id: ${id} found`];
+        result = [404, `No note with id: ${id} found`];
         isError = true;
         console.log(`No note with id: ${id} found`)
         return [isError, result]
