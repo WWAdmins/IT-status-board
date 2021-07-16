@@ -18,7 +18,7 @@ const SECURE = require('./secure.json');
  * App Variables
  */
 const app = express();
-const port = process.env.PORT || "8000";
+const port = SECURE.PORT || "8000";
 app.use(cors());
 app.use(express.json())
 
@@ -32,6 +32,11 @@ sp.setup({
     },
 });
 
+// Checks all required params are not null
+// Calls web.lists method of pnp/sp-commonjs
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns the contents of the SharePoint list, otherwise returns the statusText for the error
 async function getitReg(params) {
     console.log('Fetching IT register')
 
@@ -73,6 +78,11 @@ async function getitReg(params) {
     return [isError, result]
 }
 
+// Sets up the header configs for the extreme cloud API call
+// Calls the Extreme Cloud endpoint to get all registered devices
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns the device list, otherwise returns the statusText for the error
 async function getExCloudDeviceList(params) {
     console.log('Fetching device list')
                             
@@ -105,6 +115,11 @@ async function getExCloudDeviceList(params) {
     return [isError, result]
 }
 
+// Fetches the current set of notes from the sever side file
+// First checks if the Notes file exists, then reads it's contents
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns the contents notes file, otherwise returns the statusText for the error
 async function getNotes() {
     console.log('Fetching notes')
 
@@ -132,6 +147,16 @@ async function getNotes() {
     return [isError, result]
 }
 
+// Handels adding a new note
+// Checks that the note to be added is valid
+// Checks that the notes file exists, if not it generates a new one
+// Reads the notes file and identifies the current highest key
+// Gets the next valid key for use in hte notes file
+// Adds the new note to the file
+// Writes the notes back to the file
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns status message stating addition was successful, otherwise returns the statusText for the error
 async function addNote(req) {
     console.log('Adding note')
 
@@ -181,7 +206,12 @@ async function addNote(req) {
         return [isError, result]
     }
 
-    const nextKey = (maxKey + 1)%SECURE.maxKeyVal
+    let nextKey = (maxKey + 1)%SECURE.maxKeyVal
+    const currentKeys = Object.keys(noteJson).map(Number)
+    while (currentKeys.includes(nextKey)) {
+        nextKey = (nextKey + 3)%SECURE.maxKeyVal
+    }
+
     noteJson[nextKey] = newNote
 
     try {
@@ -199,6 +229,15 @@ async function addNote(req) {
     return [isError, result]
 }
 
+// Handels updating the priotity of an existing note
+// Checks that an id is provided in the request
+// Checks a priority is included in the request and that it is vlaid
+// Checks that the notes file exists
+// Reads in notes file and checks if note with given id exists
+// Updates priority of note then writes back to the notes file
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns status message stating update was successful, otherwise returns the statusText for the error
 async function updatePriority(req) {
     console.log('Updating note')
 
@@ -221,14 +260,10 @@ async function updatePriority(req) {
     }
 
     if(!fs.existsSync("notes.json")) {
-        try {
-            fs.writeFileSync('notes.json', JSON.stringify({}, null, 4), 'utf8')
-        } catch (err) {
-            result = err;
-            isError = true;
-            console.log('Failed to generate new notes file')
-            return [isError, result]
-        }
+        result = [500, 'Unable to find notes'];
+        isError = true;
+        console.log('Unable to find notes to be updated')
+        return [isError, result]
     }
     
     let noteJson;
@@ -269,6 +304,14 @@ async function updatePriority(req) {
     return [isError, result]
 }
 
+// Handels deleting notes
+// Checks that a key is provided in the request
+// Checks that the notes file exists
+// Reads in notes file and checks if note with given id exists
+// Deletes the given note from the set and writes the updated set back to the file
+// Returns:
+// isError : Boolean flag indicating if an error occured
+// result : If successful, returns status message stating deletion was successful, otherwise returns the statusText for the error
 async function deleteNote(req) {
     console.log('Deleting note')
 
