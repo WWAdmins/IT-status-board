@@ -105,7 +105,7 @@
                                 normalNote : note.priority == 2,
                                 lowNote : note.priority == 3
                                 }"
-                            @contextmenu.prevent.stop="handleClick3($event, noteKey)"
+                            @contextmenu.prevent.stop="handleNoteClick($event, noteKey)"
                         >
                             <b-row class="device-title">
                                 <b-col cols=10>
@@ -128,7 +128,7 @@
                                 normalNote : note.priority == 2,
                                 lowNote : note.priority == 3
                                 }"
-                            @contextmenu.prevent.stop="handleClick3($event, noteKey)"
+                            @contextmenu.prevent.stop="handleNoteClick($event, noteKey)"
                         >
                             <b-row class="device-title">
                                 <b-col cols=10>
@@ -160,7 +160,7 @@
                             <b-card 
                                 class="device-card"
                                 v-bind:class="{ dissconnect: !device.connected }"
-                                @contextmenu.prevent.stop="handleClick1($event, device)"
+                                @contextmenu.prevent.stop="handleDeviceClick($event, device)"
                             >
                                 <b-row class="device-title dot-wrap">
                                     {{`${device.hostName} : ${device.ip}`}}
@@ -190,7 +190,7 @@
                             <b-card 
                                 class="device-card"
                                 v-bind:class="{ dissconnect: !device.connected}"
-                                @contextmenu.prevent.stop="handleClick2($event, device)"
+                                @contextmenu.prevent.stop="handleHiddenDeviceClick($event, device)"
                             >
                                 <b-row class="device-title dot-wrap">
                                     {{`${device.hostName} : ${device.ip}`}}
@@ -261,6 +261,8 @@ export default {
     name: 'App',
 
     computed: {
+        // Splits the It register tickets list into a list of objects with each object having 2 tickets inside it
+        // This is done to allow for two columns to exist whilst scrolling together in display 
         itRegDoubles: function() {
             let regHold = []
             for (let i = 0; i < this.itRegList.length; i+=2) {
@@ -272,18 +274,25 @@ export default {
             }
             return regHold
         },
+
+        // Splits half of the notes from the note list into notesA to allow for a duel column display
         notesA: function() {
             const splitList = Object.entries(this.notes).filter((item, index) => {
                 return index % 2 == 0
             })
             return splitList
         },
+
+        // Splits half of the notes from the note list into notesB to allow for a duel column display
         notesB: function() {
             const splitList = Object.entries(this.notes).filter((item, index) => {
                 return index % 2 == 1
             })
             return splitList
         },
+
+        // Splits the device list into a list of objects with each object having 2 devices inside it
+        // This is done to allow for two columns to exist whilst scrolling together in display 
         deviceDoubles: function() {
             let deviceHold = []
             for (let i = 0; i < this.deviceList.length; i+=2) {
@@ -295,6 +304,9 @@ export default {
             }
             return deviceHold
         },
+
+        // Splits the hidden device list into a list of objects with each object having 2 devices inside it
+        // This is done to allow for two columns to exist whilst scrolling together in display 
         hiddenDeviceDoubles: function() {
             let hideHold = []
             for (let i = 0; i < this.hiddenDevices.length; i+=2) {
@@ -342,7 +354,7 @@ export default {
 
         this.timer = setInterval(() => {
             this.update()
-        }, CONSTANTS.refreshMinutes * 60000)
+        }, CONSTANTS.refreshMinutes * 60000) // Converts to milliseconds because that's just how this wants to work
     },
 
     beforeDestroy() {
@@ -354,31 +366,40 @@ export default {
 
     methods: {
 
-        handleClick1 (event, item) {
+        // Event handeler to enable a right click options menu on the device cards
+        handleDeviceClick (event, item) {
             this.$refs.hideOption.showMenu(event, item)
         },
 
-        handleClick2 (event, item) {
+        // Event handeler to enable a right click options menu on the hidden device cards
+        handleHiddenDeviceClick (event, item) {
             this.$refs.showOption.showMenu(event, item)
         },
 
-        handleClick3 (event, item) {
+        // Event handeler to enable a right click options menu on the note cards
+        handleNoteClick (event, item) {
             this.$refs.priorityOptions.showMenu(event, item)
         },
 
+        // Triggered when the hide option is slected from the right click options on devices
+        // Moves the given device to the hidden deivces list
         hideClicked (event) {
             const index = this.deviceList.findIndex(x => x.ipHostName == event.item.ipHostName);
             this.hiddenDevices.push(this.deviceList[index])
             this.deviceList.splice(index, 1)
         },
 
+        // Triggered when the show option is slected from the right click options on hidden devices
+        // Moves the given device to the deivce list
         showClicked(event) {
             const index = this.hiddenDevices.findIndex(x => x.ipHostName == event.item.ipHostName);
             this.deviceList.push(this.hiddenDevices[index])
             this.hiddenDevices.splice(index, 1)
             this.deviceList.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
         },
-
+        
+        // Triggered when a priority option is slected from the right click menu on note cards
+        // Calls patchPriority() if the selected priority is different from the existing priority
         priorityChange(event) {
             const noteId = event.item
             const newPriority = event.option.slug
@@ -386,7 +407,9 @@ export default {
                 this.patchPriority(noteId, newPriority)
             }
         },
-
+        
+        // Triggered when a item card in the IT register is clicked
+        // Opens a modal with the ticket's body or generates a toast for the user to inform them there is no description
         showModal(item) {
             if (item.Body) {
                 this.$bvModal.show(`description${item.Id}modal`)
@@ -395,6 +418,10 @@ export default {
             }
         },
 
+        // Generates a toast notification of the given varient in the bottom left
+        // Uses vue-toast-notification
+        // text : Message displayed on the toast
+        // varient : must be one of: ["success", "info", "warning", "error", "default"]
         makeToast(text, varient) {
             this.$toast.open({
                 message : text,
@@ -405,6 +432,9 @@ export default {
             });
         },
 
+        // Updates all lists
+        // Calls getNotes(), getItRegList() and getExCloudDeviceList()
+        // Sets the last updated timestamp once the extreme cloud call returns (extreme cloud was chosen as it seems to be the slowest to return)
         async update() {
             this.exCloudError = null;
             this.itRegError = null;
@@ -417,6 +447,9 @@ export default {
             
         },
 
+        // A generic error handeler for returns from the API calling function
+        // error : the error object returned from the API call
+        // service : an id string for what service encountered issues. Must be one of : ["exCloud", "itReg", "notes"]
         errorHandle(error, service, type) {
 
             let errPrefix;
@@ -458,11 +491,17 @@ export default {
             }
         },
 
+        // Triggered by the "Add a note" button
+        // Clears any previous inputs
+        // Focuses the user on the text input so they can start typing right away
         makeNote() {
             this.newNote = ''
-            setTimeout(()=>{ this.$refs.note.$el.focus() }, 50)
+            setTimeout(()=>{ this.$refs.note.$el.focus() }, 50) // Timeout was needed because even nextTick wasn't working. Not ideal but it works
         },
 
+        // Calls the get method of the note endpoint
+        // Sets the notes list from the return or catches any erros and gives them to errorHandle()
+        // If an error is encountered, the notes list is cleared
         async getNotes() {
             this.loadingNotes = true
 
@@ -476,6 +515,10 @@ export default {
             this.loadingNotes = false
         },
 
+        // Calls the post method of the note endpoint
+        // Collects the note text from the input in the note adding modal and the priority from the select also in that modal
+        // As no body is returned, a toast is displayed for both success or failure (styled based on success of the API call)
+        // Calls getNotes to update the note list once finised attempting the post
         async addNote(noteText, priority) {
 
             if (noteText == null) {
@@ -509,6 +552,10 @@ export default {
             await this.getNotes()
         },
 
+        // Calls the delete method of the note endpoint
+        // The note key comes from the event on clicking the X button on the note
+        // As no body is returned, a toast is displayed for both success or failure (styled based on success of the API call)
+        // Calls getNotes to update the note list once finised attempting the post
         async deleteNote(noteKey) {
             this.$delete(this.notes, noteKey)
             
@@ -525,6 +572,10 @@ export default {
             await this.getNotes()
         },
 
+        // Calls the patch method of the endpoint
+        // The id comes from the event of selecting a priority on the note card right click menu
+        // As no body is returned, a toast is displayed for both success or failure (styled based on success of the API call)
+        // Calls getNotes to update the note list once finised attempting the post
         async patchPriority(id, priority) {
             let body = {
                 "id" : id,
@@ -541,6 +592,9 @@ export default {
             await this.getNotes()
         },
 
+        // Calls the get method of the ex_cloud endpoint
+        // Calls processExcloud() with the returned device list or catches any erros and gives them to errorHandle()
+        // If an error is encountered, the device list is cleared
         async getExCloudDeviceList() {
             this.loadingDevices = true
 
@@ -561,6 +615,12 @@ export default {
             this.loadingDevices = false
         },
 
+        // Triggered one successful return of the device list from the get method
+        // Sorts the dissconnected devices to the top of the list
+        // Replaces any null locations with an array to display location unknown
+        // Adds an ipHostName field to combine the given fields to create a unique key for displaying the device cards
+        // Moves any previously hidden devices into the hidden devices list (would be annoying if you could only hide stuff until it updates again)
+        // Sets the deviceList and hiddenDevices list
         processExcloud(devices) {
             devices.sort((a, b) => (a.connected > b.connected) ? 1 : -1)
             let toHide = []
@@ -586,6 +646,9 @@ export default {
             this.deviceList = devices
         },
 
+        // Calls the get method of the it)reg endpoint
+        // Sets itRegList from the return of calling processItReg on the response data or  catches any erros and gives them to errorHandle()
+        // If an error is encountered, the device list is cleared
         async getItRegList() {
             this.loadingItReg = true
 
@@ -624,6 +687,11 @@ export default {
             this.loadingItReg = false
         },
 
+        // Processes the recieved list of IT register tickets
+        // Tallies the counts of each ticket priority level
+        // Changes null valvues of awaiting action by to "Not Assigned"
+        // Sorts the list based on priority then age/date
+        // Returns the processed list
         processItReg(itRegPreList) {
             this.ticketPriorities = { 1 : 0, 2 : 0, 3 : 0 } // Reset current ticket counters
             for (let item of itRegPreList) {
@@ -648,6 +716,9 @@ export default {
             return itRegPreList
         },
 
+        // Called by processItReg for each ticket in the active register
+        // Takes a date-time stamp and creates a more user friendly string to display to indicate the ticket's age
+        // Returns display string for the ticket's age
         getDisplayDate(dateTimeStamp) {
             const dateStamp = new DateTime.fromISO(dateTimeStamp)
             const now = new DateTime.now()
