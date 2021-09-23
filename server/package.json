@@ -21,6 +21,8 @@
     "fs": "0.0.1-security"
   },
   "nodemonConfig": {
-    "ignore": ["notes.json"]
- }
+    "ignore": [
+      "notes.json"
+    ]
+  }
 }
